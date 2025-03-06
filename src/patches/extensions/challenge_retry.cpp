@@ -55,7 +55,7 @@ void pausemenu_handler() {
         if (mkb::sub_mode == mkb::SMD_GAME_GOAL_REPLAY_INIT || mkb::sub_mode == mkb::SMD_GAME_GOAL_REPLAY_MAIN ||
             mkb::sub_mode == mkb::SMD_GAME_GOAL_INIT || mkb::sub_mode == mkb::SMD_GAME_GOAL_MAIN ||
             mkb::sub_mode == mkb::SMD_GAME_READY_INIT || mkb::sub_mode == mkb::SMD_GAME_READY_MAIN ||
-            mkb::mode_info.ball_mode == mkb::BALLMODE_ON_BONUS_STAGE || mkb::num_players != 1 ||
+            mkb::mode_info.ball_mode & mkb::BALLMODE_ON_BONUS_STAGE || mkb::num_players != 1 ||
             mkb::balls[0].monkey_count < 2 || (mkb::mode_info.ball_mode & mkb::BALLMODE_GOALED)) {
             mkb::pausemenu_entry_counts[1] = 4;
             mkb::g_current_pause_menu_entry_count = 4;
