@@ -10,7 +10,7 @@ namespace challenge_retry {
 TICKABLE_DEFINITION((
         .name = "challenge-mode-retry",
         .description = "Challenge Mode retry",
-        .init_main_loop = init))
+        .init_main_loop = init_main_loop))
 
 static patch::Tramp<decltype(&mkb::pause_game)> s_pause_game_tramp;
 
@@ -135,7 +135,7 @@ void pausemenu_handler() {
     }
 }
 
-void init() {
+void init_main_loop() {
     patch::hook_function(s_pause_game_tramp, mkb::pause_game, []() {
         s_pause_game_tramp.dest();
         pausemenu_handler();

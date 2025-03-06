@@ -9,7 +9,7 @@ namespace story_double_stage_select {
 TICKABLE_DEFINITION((
         .name = "story-double-stage-select",
         .description = "Story mode double stage select",
-        .init_main_loop = init,
+        .init_main_loop = init_main_loop,
         .tick = tick))
 
 static patch::Tramp<decltype(&mkb::check_pause_menu_input)> s_check_pause_menu_input_tramp;
@@ -43,7 +43,7 @@ void pausemenu_handler(mkb::Sprite* pause_sprite) {
     }
 }
 
-void init() {
+void init_main_loop() {
     // Edits behaviors in the function which handles pausemenu selections
     patch::write_nop(reinterpret_cast<void*>(0x802745a4));
     patch::write_nop(reinterpret_cast<void*>(0x8027457c));
