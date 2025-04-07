@@ -7,20 +7,20 @@
 
 namespace menu_stage_id {
 
-u16 stage_id = 0;
-
-// Always enabled
+int stage_id = -1;
 
 TICKABLE_DEFINITION((
         .name = "menu-stage-id",
         .description = "Menu stage ID",
         .active_value = stage_id,
-        .lower_bound = 1,
+        .lower_bound = -1,
         .upper_bound = 420,
         .init_main_loop = init_main_loop,
         .init_main_game = init_main_game))
 
 // In functions which handle the menu stage to load, use our stage ID
+// If the passed value is 0, the patch is disabled and default behavior
+// is used (more than one stage ID is used for these in vanilla)
 void init_main_loop() {
     stage_id = *active_tickable_ptr->active_value;// Get our stage ID
     patch::write_word(reinterpret_cast<void*>(0x80282c10), PPC_INSTR_LI(PPC_R31, stage_id));

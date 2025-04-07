@@ -1,4 +1,4 @@
-// This is the config file for Workshop Mod 1.0.1!
+// This is the config file for Workshop Mod 1.0.3!
 // Place this in the root of your game directory, and name it config.txt
 // It should be in the same folder as the included REL file, mkb2.rel_sample.rel
 //
@@ -227,6 +227,11 @@
 // Adds a one-second interval where the player cannot pause after pausing once
 // during gameplay
 
+// menu-stage-id
+//
+// Changes the stage ID used on the main menu. Setting this to -1 will lead to
+// default behavior (where the menu stage ID also uses more than one stage ID)
+
 // ----------------------------------------------------------------------------
 
 // 'enabled' - Applies the patch
@@ -236,7 +241,7 @@
 	custom-music-id: disabled
 	custom-theme-id: disabled
 	menu-option-toggle: disabled
-	menu-stage-id: 201
+	menu-stage-id: -1
 	challenge-mode-retry: disabled
 	challenge-mode-death-count: disabled
 	four-digit-banana-counter: disabled
