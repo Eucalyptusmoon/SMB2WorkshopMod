@@ -64,6 +64,9 @@ void init_main_game() {
     // Nop a call to handle hardcoded stage object drawing for
     // SMB2 stages
     patch::write_nop(reinterpret_cast<void*>(0x809140f4));
+    // In the array of Story Mode preview settings, normalize Entangled Path's
+    // scale
+    mkb::MAIN_GAME_STORY_STAGE_PREVIEW_PARAMS[73].scale = 1;
 }
 
 }// namespace remove_hardcodes

@@ -3132,6 +3132,15 @@ struct S32Vec {
 } __attribute__((__packed__));
 static_assert(sizeof(S32Vec) == 0x8);
 
+typedef struct StoryStagePreviewParam StoryStagePreviewParam, *PStoryStagePreviewParam;
+
+struct StoryStagePreviewParam { /* Used for each stage preview on the Story Mode Stage Select screen */
+    s16 stage_id; /* Only used when generating previews through Debug Mode */
+    undefined2 field0x2; /* Seems to usually be 0x1000 or 0x1800 */
+    float scale; /* Usually 1 with the exception of Entangled Path */
+} __attribute__((__packed__));
+static_assert(sizeof(StoryStagePreviewParam) == 0x8);
+
 enum {
     OF_G_SMTH_WITH_CAMERA=2,
     OF_GAME_PAUSED=8
@@ -6335,6 +6344,7 @@ extern "C" {
     extern float view_stage_aspect_ratio;
     extern pointer switchdataD_804ee064;
     extern undefined * story_mode_funcs;
+    extern struct StoryStagePreviewParam MAIN_GAME_STORY_STAGE_PREVIEW_PARAMS[100];
     extern undefined1 ape_story_select_anim_table;
     extern pointer switchdataD_804eee68;
     extern pointer switchdataD_804eee88;
@@ -9868,6 +9878,7 @@ extern "C" {
     void g_load_stageselect_after_cutscene(void);
     void g_preload_next_stage_files(int param_1, int param_2, int param_3);
     void clear_unlock_info(void);
+    void unlock_master(void);
     byte g_is_master_unlocked(void);
     void empty_function(void);
     void g_set_unlockables_status(void);
@@ -10186,6 +10197,7 @@ extern "C" {
     void sprite_practice_stage_preview_disp(struct Sprite * sprite);
     void sprite_practice_stage_preview_mask_disp(u8 * status, struct Sprite * sprite);
     void create_practice_mode_preview_sprites(void);
+    void create_fight_stage_preview_sprites(void);
     void sprite_gamedata_disp(int param_1);
     void create_gamedata_sprite(void);
     void menu_option_game_data_tick_child(void);
