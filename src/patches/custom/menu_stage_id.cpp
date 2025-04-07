@@ -19,7 +19,7 @@ TICKABLE_DEFINITION((
         .init_main_game = init_main_game))
 
 // In functions which handle the menu stage to load, use our stage ID
-// If the passed value is 0, the patch is disabled and default behavior
+// If the passed value is -1, the patch is disabled and default behavior
 // is used (more than one stage ID is used for these in vanilla)
 void init_main_loop() {
     stage_id = *active_tickable_ptr->active_value;// Get our stage ID
