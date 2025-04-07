@@ -5725,7 +5725,7 @@ extern "C" {
     extern undefined * MAIN_MODE_NAMES[8];
     extern undefined * SUB_MODE_NAMES[265];
     extern struct RelBufferInfo additional_rel_buffer_info;
-    extern undefined * DEBUG_MENU_OPTION_NAMES[7];
+    extern char * DEBUG_MENU_OPTION_NAMES[7];
     extern undefined * switchdataD_80370704;
     extern undefined * switchdataD_80370758;
     extern undefined * switchdataD_80370794;
@@ -5984,6 +5984,7 @@ extern "C" {
     extern undefined g_some_tpl_buffer;
     extern undefined g_init_common_tpl_buf;
     extern undefined g_some_nl_model_buffer_2;
+    extern struct NlBuffer * g_stage_nl_buf;
     extern struct NlBuffer * * g_init_common_gma_buf;
     extern struct ScenInfo scen_info;
     extern Mtx * g_ord_tbl_stuff;
@@ -6056,6 +6057,7 @@ extern "C" {
     extern bool stageselect_is_storymode;
     extern s8 stageselect_course_idx[2];
     extern s8 stageselect_course_stage_idx[2][10];
+    extern undefined1 stageselect_category_selected;
     extern undefined1 g_last_selected_bowling_difficulty;
     extern undefined4 g_auto_reload_setting;
     extern undefined4 menu_tick_func;
@@ -6170,7 +6172,7 @@ extern "C" {
     extern struct StagedefFileHeader * stagedef;
     extern undefined2 seesaw_count;
     extern undefined1 g_something_with_wl;
-    extern undefined4 stage_tpl;
+    extern struct TplBuffer * stage_tpl;
     extern struct GmaBuffer * stage_gma;
     extern undefined2 current_stage_id;
     extern char current_stage_name[128];
@@ -6333,6 +6335,7 @@ extern "C" {
     extern float view_stage_aspect_ratio;
     extern pointer switchdataD_804ee064;
     extern undefined * story_mode_funcs;
+    extern undefined1 ape_story_select_anim_table;
     extern pointer switchdataD_804eee68;
     extern pointer switchdataD_804eee88;
     extern pointer switchdataD_804eef70;
@@ -10100,7 +10103,7 @@ extern "C" {
     void menu_main_game_select_tick(void);
     void menu_level_select_tick(void);
     void g_get_some_challenge_mode_difficulty_info(int param_1);
-    void g_get_some_category_count(int flag, undefined4 * g_out_1, int * g_out_2);
+    void g_get_some_category_count(int flag, int * g_out_1, int * g_out_2);
     void menu_stage_select_tick(void);
     void menu_start_story_mode(void);
     void menu_start_challenge_mode(void);
@@ -10163,7 +10166,7 @@ extern "C" {
     void sprite_game_settings_tick(u8 * status, struct Sprite * sprite);
     void sprite_game_settings_disp(struct Sprite * param_1);
     void sprite_practice_stage_select_tick(u8 * status, struct Sprite * sprite);
-    void sprite_practice_stage_select_disp(int param_1);
+    void sprite_practice_stage_select_disp(struct Sprite * sprite);
     void sprite_fight_stage_select_tick(u8 * status, struct Sprite * sprite);
     void sprite_fight_stage_select_disp(struct Sprite * param_1);
     void sprite_button_tick(u8 * status, struct Sprite * sprite);

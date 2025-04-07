@@ -8447,6 +8447,7 @@
 8054DB64:g_some_tpl_buffer
 8054DB70:g_init_common_tpl_buf
 8054DB7C:g_some_nl_model_buffer_2
+8054DB80:g_stage_nl_buf
 8054DB88:g_init_common_gma_buf
 8054DBB8:scen_info
 8054DBBA:active_story_mode_func
@@ -8531,6 +8532,7 @@
 8054DF9A:stageselect_storymode_world_idx
 8054DF9B:stageselect_course_stage_idx
 8054DFA5:stageselect_story_world_stage_idx
+8054DFAF:stageselect_category_selected
 8054DFE1:g_last_selected_bowling_difficulty
 8054DFF0:g_auto_reload_setting
 8054E02C:menu_tick_func
@@ -9305,6 +9307,7 @@
 809158E0:s_NewApeAllPreLoad:%d
 809160E0:switchdataD_804ee064
 809162D8:story_mode_funcs
+80916E78:ape_story_select_anim_table
 80916EE4:switchdataD_804eee68
 80916F04:switchdataD_804eee88
 80916FEC:switchdataD_804eef70

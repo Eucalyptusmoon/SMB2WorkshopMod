@@ -9,6 +9,7 @@
 #include "internal/ui/ui_manager.h"
 #include "internal/version.h"
 #include "mkb/mkb.h"
+#include "utils/ppcutil.h"
 
 namespace main {
 static patch::Tramp<decltype(&mkb::process_inputs)> s_process_inputs_tramp;
@@ -29,6 +30,21 @@ since it reports every frame, and thus clutters the console */
     patch::write_nop(reinterpret_cast<void*>(0x80299f54));
 }
 
+static void disable_debug_story() {
+    // In the functions which handles selections on the title screen debug menu,
+    // rid the code which is meant to take us to (broken) Story Mode
+    patch::write_nop(reinterpret_cast<void*>(0x80272120));
+    patch::write_nop(reinterpret_cast<void*>(0x80272128));
+    patch::write_nop(reinterpret_cast<void*>(0x80272130));
+    patch::write_nop(reinterpret_cast<void*>(0x8027211c));
+    // Rename the STORY MODE menu option
+    mkb::DEBUG_MENU_OPTION_NAMES[2] = "Stan Meghan Trainor";
+    // Expand the box which holds the menu options
+    patch::write_word(reinterpret_cast<void*>(0x80272310), PPC_INSTR_LI(PPC_R3, 0x23));
+    patch::write_word(reinterpret_cast<void*>(0x80272360), 0x2c1d0017);// cmpwi r29, 23
+    patch::write_word(reinterpret_cast<void*>(0x802722d8), 0x2c1d0017);// cmpwi r29, 23
+}
+
 void init() {
     LOG("SMB2 Workshop Mod v%d.%d.%d loaded",
         version::WSMOD_VERSION.major,
@@ -39,6 +55,7 @@ void init() {
     modlink::write();
 
     perform_assembly_patches();
+    disable_debug_story();
 
     // Load our config file
     config::parse_config();
