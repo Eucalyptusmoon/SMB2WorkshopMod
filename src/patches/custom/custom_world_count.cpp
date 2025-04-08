@@ -24,10 +24,10 @@ static patch::Tramp<decltype(&mkb::dmd_scen_sceneplay_init)> s_sceneplay_init_tr
 
 void dmd_scen_sceneplay_init_patch() {
     if (mkb::main_mode != mkb::MD_AUTHOR) {
-    if (mkb::scen_info.next_world == world_count) {
-        mkb::scen_info.next_world = 10;
-        mkb::scen_info.world = 10;
-    }
+        if (mkb::scen_info.next_world == world_count) {
+            mkb::scen_info.next_world = 10;
+            mkb::scen_info.world = 10;
+        }
     }
     s_sceneplay_init_tramp.dest();
 }
@@ -38,8 +38,8 @@ void init_main_loop() {
 }
 
 void init_main_game() {
-        patch::hook_function(s_sceneplay_init_tramp,
-                             mkb::dmd_scen_sceneplay_init, dmd_scen_sceneplay_init_patch);
+    patch::hook_function(s_sceneplay_init_tramp,
+                         mkb::dmd_scen_sceneplay_init, dmd_scen_sceneplay_init_patch);
 }
 
 void init_sel_ngc() {

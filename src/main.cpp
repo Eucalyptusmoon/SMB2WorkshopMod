@@ -31,7 +31,7 @@ since it reports every frame, and thus clutters the console */
 }
 
 static void disable_debug_story() {
-    // In the functions which handles selections on the title screen debug menu,
+    // In the function which handles selections on the title screen debug menu,
     // rid the code which is meant to take us to (broken) Story Mode
     patch::write_nop(reinterpret_cast<void*>(0x80272120));
     patch::write_nop(reinterpret_cast<void*>(0x80272128));

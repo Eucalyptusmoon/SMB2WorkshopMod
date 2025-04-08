@@ -1,11 +1,11 @@
 #include "story_char_select.h"
 
+#include "custom/menu_option_toggle.h"
 #include "internal/assembly.h"
 #include "internal/pad.h"
 #include "internal/patch.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
-#include "custom/menu_option_toggle.h"
 
 namespace story_char_select {
 
@@ -74,7 +74,6 @@ void init_sel_ngc() {
     if ((menu_option_toggle::main_game_bitflag & 0x1) == 0) {
         mkb::strcpy(mkb::MENU_STORY_DESCRIPTION_TEXT, "This mode is only for 1 player. The next world\nwill be available if you clear 10 stages.\n*You will receive Play Points.");
     }
-    
 }
 
 void tick() {
@@ -82,25 +81,24 @@ void tick() {
     // transitions to not work and a few other oddities, so this is a little more
     // messy than expected
     if (mkb::main_mode == mkb::MD_SEL) {
+        // These all change values in menu_character_select_tick
         // If Story Mode is selected on the menu...
-        if (mkb::g_focused_maingame_menu == 0) { 
+        if (mkb::g_focused_maingame_menu == 0) {
             // ...change the screen stack check for what next screen to throw us at to 0xff
-            patch::write_word(reinterpret_cast<void*>(0x808fbec8), 0x2c0000ff); 
+            patch::write_word(reinterpret_cast<void*>(0x808fbec8), 0x2c0000ff);
             // Change the screen stack check for what next screen to throw us at to the Mode Select menu
-            patch::write_word(reinterpret_cast<void*>(0x808fc8a0), 0x2c000007); 
+            patch::write_word(reinterpret_cast<void*>(0x808fc8a0), 0x2c000007);
             // Change the next screen value to the one for entering Story Mode
-            patch::write_word(reinterpret_cast<void*>(0x808fc8e0), 0x38a0000c); 
-
+            patch::write_word(reinterpret_cast<void*>(0x808fc8e0), 0x38a0000c);
         }
         else {
             // Original instructions
             // Change the screen stack check for what next screen to throw us at to the Mode Select menu
-            patch::write_word(reinterpret_cast<void*>(0x808fbec8), 0x2c000007); 
+            patch::write_word(reinterpret_cast<void*>(0x808fbec8), 0x2c000007);
             // Change the screen stack check for what next screen to throw us at to the Bowling menu
-            patch::write_word(reinterpret_cast<void*>(0x808fc8a0), 0x2c000024); 
+            patch::write_word(reinterpret_cast<void*>(0x808fc8a0), 0x2c000024);
             // Change the next screen value to the one for entering Bowling
-            patch::write_word(reinterpret_cast<void*>(0x808fc8e0), 0x38a00027); 
-
+            patch::write_word(reinterpret_cast<void*>(0x808fc8e0), 0x38a00027);
         }
     }
 }
