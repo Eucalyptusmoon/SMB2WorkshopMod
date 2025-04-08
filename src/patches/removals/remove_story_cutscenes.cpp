@@ -13,7 +13,7 @@ TICKABLE_DEFINITION((
         .description = "Story Mode cutscene removal",
         .init_main_game = init_main_game, ))
 
-constexpr auto WORLD_COUNT = 10;// TODO: attach to patch that changes this
+constexpr auto WORLD_COUNT = 10;
 
 // Skips cutscenes in story mode.
 // TODO: Maybe fade the screen out so the transition screen color is not based off the world fog
