@@ -5,6 +5,7 @@
 #include "internal/patch.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
+#include "custom/menu_option_toggle.h"
 
 namespace story_char_select {
 
@@ -69,8 +70,11 @@ void init_main_game() {
 void init_sel_ngc() {
     // Patches the 'next screen ID' for the 'STORY MODE' button in the Mode Select screen
     mkb::menu_main_game_select_entries[0].next_screen_id = mkb::MENUSCREEN_CHARACTER_SELECT_2;
-    // Terminate the description string for Story Mode before the 'Gameplay will begin' mention
-    patch::write_word(reinterpret_cast<void*>(0x8092174b), 0x00000000); 
+    // Remove the 'Gameplay will begin' portion of the Story Mode menu description text
+    if ((menu_option_toggle::main_game_bitflag & 0x1) == 0) {
+        mkb::strcpy(mkb::MENU_STORY_DESCRIPTION_TEXT, "This mode is only for 1 player. The next world\nwill be available if you clear 10 stages.\n*You will receive Play Points.");
+    }
+    
 }
 
 void tick() {
