@@ -116,7 +116,7 @@
 // Allows for the stages that appear in the background of the menu, stages 3 and 201,
 // to have mirrors in the background. This is experimental and may cause issues.
 
-// custom-world-count (CURRENTLY UNAVAILABLE)
+// custom-world-count
 //
 // Allows for the number of worlds in story mode to be modified. After the final world,
 // the end cutscene will play, or the credits sequence will start if the cutscene skip
@@ -240,6 +240,7 @@
 # REL Patches {
 	custom-music-id: disabled
 	custom-theme-id: disabled
+	custom-world-count: 10
 	menu-option-toggle: disabled
 	menu-stage-id: -1
 	challenge-mode-retry: disabled
