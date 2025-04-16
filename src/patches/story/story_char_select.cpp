@@ -71,7 +71,7 @@ void init_sel_ngc() {
     // Patches the 'next screen ID' for the 'STORY MODE' button in the Mode Select screen
     mkb::menu_main_game_select_entries[0].next_screen_id = mkb::MENUSCREEN_CHARACTER_SELECT_2;
     // Remove the 'Gameplay will begin' portion of the Story Mode menu description text
-    if ((menu_option_toggle::main_game_bitflag & 0x1) == 0) {
+    if ((!tickable::get_tickable_manager().get_tickable_status("menu-option-toggle")) || ((menu_option_toggle::main_game_bitflag & 0x1) == 0)) {
         mkb::strcpy(mkb::MENU_STORY_DESCRIPTION_TEXT, "This mode is only for 1 player. The next world\nwill be available if you clear 10 stages.\n*You will receive Play Points.");
     }
 }

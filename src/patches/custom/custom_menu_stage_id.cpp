@@ -1,4 +1,4 @@
-#include "menu_stage_id.h"
+#include "custom_menu_stage_id.h"
 
 #include "internal/assembly.h"
 #include "internal/patch.h"
