@@ -3034,7 +3034,7 @@ struct ModeInfo { /* I don't know what to call this, but there's some important 
     undefined2 g_some_stage_jump_distance;
     undefined4 bananas_remaining;
     undefined2 field12_0x28;
-    undefined2 field13_0x2a;
+    undefined2 continues_used;
     undefined2 g_next_stage_id2;
     s16 cm_stage_id; /* Current challenge mode stage id, updated immediately after finishing stage */
     undefined2 field16_0x30;
@@ -9880,7 +9880,7 @@ extern "C" {
     void g_preload_next_stage_files(int param_1, int param_2, int param_3);
     void clear_unlock_info(void);
     void unlock_master(void);
-    byte g_is_master_unlocked(void);
+    byte is_master_unlocked(void);
     void empty_function(void);
     void g_set_unlockables_status(void);
     void g_handle_goal(void);

@@ -80,7 +80,7 @@ void handle_final_bonus() {
     // If the final stage is a bonus and we get a Bonus Finish or Time Over, do end of difficulty or extra stuff
     if (((mkb::mode_info.ball_mode & mkb::BALLMODE_ON_BONUS_STAGE | mkb::BALLMODE_ON_FINAL_STAGE) == (mkb::BALLMODE_ON_BONUS_STAGE | mkb::BALLMODE_ON_FINAL_STAGE)) && (mkb::in_practice_mode == false)) {
         bool start_extras = false;
-        if (((mkb::mode_flags & mkb::MF_0x1) != mkb::MF_NONE) && (mkb::mode_info.field13_0x2a == 0)) {
+        if (((mkb::mode_flags & mkb::MF_0x1) != mkb::MF_NONE) && (mkb::mode_info.continues_used == 0)) {
             start_extras = true;
         }
         if (((start_extras) && ((mkb::mode_flags & mkb::MF_PLAYING_EXTRA_COURSE) != mkb::MF_NONE)) &&
@@ -93,6 +93,15 @@ void handle_final_bonus() {
         }
         if ((start_extras) && ((mkb::mode_flags & mkb::MF_PLAYING_MASTER_EX_COURSE) != mkb::MF_NONE)) {
             start_extras = false;
+        }
+        if (tickable::get_tickable_manager().get_tickable_status("remove-extras")) {
+            start_extras = false;
+            if ((mkb::curr_difficulty == mkb::DIFF_EXPERT) && (mkb::mode_info.continues_used == 0)) {
+                char is_master_unlocked = mkb::is_master_unlocked();
+                if (is_master_unlocked == 0) {
+                    mkb::unlock_master();
+                }
+            }
         }
         if (mkb::mode_info.ball_mode & mkb::BALLMODE_ON_FINAL_STAGE) {
             if (mkb::mode_info.ball_mode & mkb::BALLMODE_OUT_OF_TIME_RINGOUT | mkb::BALLMODE_FALLEN_OUT | mkb::BALLMODE_CLEARED_BONUS_PERFECT) {
