@@ -1,4 +1,4 @@
-// This is the config file for Workshop Mod 1.0.3!
+// This is the config file for Workshop Mod 1.0.4!
 // Place this in the root of your game directory, and name it config.txt
 // It should be in the same folder as the included REL file, mkb2.rel_sample.rel
 //
