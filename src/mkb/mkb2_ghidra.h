@@ -5905,6 +5905,7 @@ extern "C" {
     extern char LOADIN_TEXT_FINAL_STAGE[12];
     extern undefined stage_name_tilde_fmt_string;
     extern undefined * switchdataD_803a96f8;
+    extern char SPRITE_1UP_TEXT_STRING[4];
     extern undefined * switchdataD_803a9e6c;
     extern pointer switchdataD_803a9ea4;
     extern undefined * switchdataD_803a9ee8;

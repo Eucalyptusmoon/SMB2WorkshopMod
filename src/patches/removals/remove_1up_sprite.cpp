@@ -2,6 +2,7 @@
 
 #include "internal/patch.h"
 #include "internal/tickable.h"
+#include "mkb/mkb.h"
 
 namespace remove_1up_sprite {
 
@@ -10,9 +11,11 @@ TICKABLE_DEFINITION((
         .description = "1UP sprite removal",
         .init_main_loop = init_main_loop, ))
 
-// Nops a call to the function which draws the 1UP sprite
+// Null the 1UP sprite's text string
+// Some functions associated with the sprite play sound effects, so this is
+// The best removal method
 void init_main_loop() {
-    patch::write_nop(reinterpret_cast<void*>(0x802b8264));
+    mkb::strcpy(mkb::SPRITE_1UP_TEXT_STRING, "");
 }
 
 }// namespace remove_1up_sprite

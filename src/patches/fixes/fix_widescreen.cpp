@@ -132,7 +132,12 @@ void create_new_1up_sprite(u8* status, mkb::Sprite* sprite) {
         sprite->widescreen_translation_x = 0x140;
         sprite->para1 = 120;
         sprite->tick_func = mkb::sprite_1up_tick;
-        mkb::strcpy(sprite->text, "1UP");
+        if (tickable::get_tickable_manager().get_tickable_status("remove-1up-sprite")) {
+            mkb::strcpy(sprite->text, "");
+        }
+        else {
+            mkb::strcpy(sprite->text, "1UP");
+        }
     }
     return;
 }
