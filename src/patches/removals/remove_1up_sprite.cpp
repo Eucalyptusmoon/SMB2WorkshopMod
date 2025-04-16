@@ -13,7 +13,7 @@ TICKABLE_DEFINITION((
 
 // Null the 1UP sprite's text string
 // Some functions associated with the sprite play sound effects, so this is
-// The best removal method
+// the best removal method
 void init_main_loop() {
     mkb::strcpy(mkb::SPRITE_1UP_TEXT_STRING, "");
 }

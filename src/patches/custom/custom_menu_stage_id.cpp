@@ -5,13 +5,13 @@
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
-namespace menu_stage_id {
+namespace custom_menu_stage_id {
 
 int stage_id = -1;
 
 TICKABLE_DEFINITION((
-        .name = "menu-stage-id",
-        .description = "Menu stage ID",
+        .name = "custom-menu-stage-id",
+        .description = "Custom menu stage ID patch",
         .active_value = stage_id,
         .lower_bound = -1,
         .upper_bound = 420,
@@ -32,4 +32,4 @@ void init_main_game() {
     patch::write_word(reinterpret_cast<void*>(0x808fe7d8), PPC_INSTR_LI(PPC_R3, stage_id));
 }
 
-}// namespace menu_stage_id
+}// namespace custom_menu_stage_id

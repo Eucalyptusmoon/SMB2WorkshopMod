@@ -227,7 +227,7 @@
 // Adds a one-second interval where the player cannot pause after pausing once
 // during gameplay
 
-// menu-stage-id
+// custom-menu-stage-id
 //
 // Changes the stage ID used on the main menu. Setting this to -1 will lead to
 // default behavior (where the menu stage ID also uses more than one stage ID)
@@ -238,11 +238,11 @@
 // 'disabled' - Does not apply the patch
 
 # REL Patches {
+	custom-menu-stage-id: -1
 	custom-music-id: disabled
 	custom-theme-id: disabled
 	custom-world-count: 10
 	menu-option-toggle: disabled
-	menu-stage-id: -1
 	challenge-mode-retry: disabled
 	challenge-mode-death-count: disabled
 	four-digit-banana-counter: disabled
