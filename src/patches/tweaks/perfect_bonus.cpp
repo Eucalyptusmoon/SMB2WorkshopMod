@@ -19,8 +19,12 @@ static patch::Tramp<decltype(&mkb::smd_game_bonus_clear_init)> s_smd_game_bonus_
 // there isn't a tradeoff between not getting a banana and going for
 // the goal instead
 void add_goal_score() {
+    int goal_score;
+    int stored_scores[4];
     mkb::mode_info.g_some_timer_frame_remaining_count = mkb::mode_info.stage_time_frames_remaining;
     mkb::increment_score(2, 0);
+    goal_score = mkb::get_goal_score(0, stored_scores);
+    mkb::replay->score += goal_score;
 }
 
 // If the stage is a bonus stage (ball mode 0x40) and no bananas remain,

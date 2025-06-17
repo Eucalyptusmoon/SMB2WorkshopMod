@@ -798,7 +798,7 @@ struct Replay { /* Unknown size atm */
     u8 floorNum;
     u8 monkey;
     undefined field_0x7[0x9];
-    u32 field16_0x10;
+    u32 score;
     undefined field_0x14[0x4];
     s16 g_stageTimeLimit1;
     s16 g_duration;

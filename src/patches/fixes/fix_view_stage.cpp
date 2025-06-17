@@ -41,11 +41,21 @@ void new_render_func(void) {
             mkb::load_gx_pos_nrm_mtx(mkb::mtxa, 0);
             pSVar6 = pSVar10->stage_model_b_list;
             for (iVar7 = 0; iVar7 < (int) pSVar10->stage_model_b_count; iVar7 = iVar7 + 1) {
-                if (((pSVar6->stage_model_a->some_effect_bitflag & mkb::EFFECT_TRANSPARENCY_A) == mkb::EFFECT_NULL) && (pGVar3 = (mkb::GmaModel*) mkb::g_some_draw_func2((int) pSVar6->stage_model_a),
-                                                                                                                        pGVar3 != (mkb::GmaModel*) 0x0)) {
+                if (mkb::g_some_render_flag == 0x6) {
+                    if ((pSVar6->stage_model_a->some_effect_bitflag & 0x4) == 0) {
+                        pSVar6 = pSVar6 + 1;
+                        continue;
+                    }
+                }
+
+                if (((pSVar6->stage_model_a->some_effect_bitflag & mkb::EFFECT_TRANSPARENCY_A) == mkb::EFFECT_NULL) &&
+                    (pGVar3 = (mkb::GmaModel*) mkb::g_some_draw_func2((int) pSVar6->stage_model_a),
+                     pGVar3 != (mkb::GmaModel*) 0x0)) {
+
                     if (pSVar10->texture_scroll != (mkb::StagedefTextureScroll*) 0x0) {
                         mkb::g_something_with_texture_scroll(pSVar10->texture_scroll);
                     }
+
                     if ((pSVar6->stage_model_a->some_effect_bitflag & mkb::EFFECT_TRANSPARENCY_B) == mkb::EFFECT_NULL) {
                         mkb::avdisp_draw_model_culled_sort_never(pGVar3);
                     }
@@ -55,8 +65,10 @@ void new_render_func(void) {
                         mkb::g_smth_with_rendefc_reflective_height(0.0);
                     }
                 }
+
                 pSVar6 = pSVar6 + 1;
             }
+
             uVar2 = mkb::g_smth_with_challenge_mode_var_and_3p();
             pSVar8 = mkb::stagedef->coli_header_list[iVar9].stage_model_instance_list;
             mkb::mtxa_push();
