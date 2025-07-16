@@ -10,6 +10,7 @@ namespace challenge_retry {
 TICKABLE_DEFINITION((
         .name = "challenge-mode-retry",
         .description = "Challenge Mode retry",
+        .enabled = true,
         .init_main_loop = init_main_loop))
 
 static patch::Tramp<decltype(&mkb::pause_game)> s_pause_game_tramp;
@@ -28,20 +29,36 @@ void pausemenu_handler() {
     static char* menu_options_2[total_size] = {nullptr};
 
     // Strings to be stored in the array
-    char* options_1[] = {
-        // Menu strings during gameplay
-        "Continue game",
-        "Retry",
-        "View stage",
-        "How to play",
-        "Exit game"};
-    char* options_2[] = {
-        // Menu strings during replay
-        "Continue game",
-        "Retry",
-        "Save replay",
-        "How to play",
-        "Exit game"};
+    char* options_1[5];
+    char* options_2[5];
+
+    if (!tickable::get_tickable_manager().get_tickable_status("smb1-camera-toggle")) {
+        options_1[0] = "Continue game";
+        options_1[1] = "Retry";
+        options_1[2] = "View stage";
+        options_1[3] = "How to play";
+        options_1[4] = "Exit game";
+
+        options_2[0] = "Continue game";
+        options_2[1] = "Retry";
+        options_2[2] = "Save replay";
+        options_2[3] = "How to play";
+        options_2[4] = "Exit game";
+    }
+    else {
+        options_1[0] = "Continue game";
+        options_1[1] = "Retry";
+        options_1[2] = "View stage";
+        options_1[3] = "Camera";
+        options_1[4] = "Exit game";
+
+        options_2[0] = "Continue game";
+        options_2[1] = "Retry";
+        options_2[2] = "Save replay";
+        options_2[3] = "Camera";
+        options_2[4] = "Exit game";
+    }
+
 
     // Fill the array with strings and gaps of nullptrs
     int current_index = 0;

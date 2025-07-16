@@ -1574,10 +1574,10 @@ struct Sprite {
     f32 fpara3; /* Arbitrary float param 3 */
     struct Sprite * prev_sprite;
     struct Sprite * next_sprite;
-    undefined4 g_maybe_pos_x;
-    undefined4 g_maybe_pos_y;
-    undefined4 field47_0x74;
-    undefined4 field48_0x78;
+    s32 left;
+    s32 top;
+    s32 right;
+    s32 bottom;
     undefined field_0x7c[0x4];
     float alpha; /* called trnsl in game? */
     struct Rgb24 add_color;
@@ -3339,27 +3339,37 @@ typedef undefined4 StageModelEffectBitfield;
 typedef struct Effect Effect, *PEffect;
 
 struct Effect {
-    word g_idx;
+    word pool_id;
     short id;
-    undefined field_0x4[0x4];
+    u32 flags;
     EffectType  type;
-    undefined field_0xa[0x2];
-    s32 field9_0xc;
-    undefined field_0x10[0x4];
-    undefined2 g_ball_idx;
-    s16 field15_0x16;
-    undefined field_0x18[0xc];
-    struct Vec g_scale;
-    s32 g_pointer_to_some_struct;
-    struct Vec g_pos;
-    struct Vec g_some_vec;
-    struct S16Vec g_some_rot;
-    undefined field_0x52[0x6];
+    s16 state;
+    s32 timer;
+    s32 g_other_timer;
+    s16 ball_idx;
+    u16 cameras;
+    float field9_0x18;
+    float field10_0x1c;
+    float field11_0x20;
+    struct Vec scale;
+    struct GmaModel * model;
+    struct Vec pos;
+    struct Vec vel;
+    struct S16Vec rot;
+    s16 field17_0x52;
+    s16 field18_0x54;
+    s16 field19_0x56;
     struct Vec g_prev_pos;
-    undefined field_0x64[0x28];
-    struct Vec g_some_vec2;
-    struct Vec g_some_vec3;
-    undefined field_0xa4[0xc];
+    struct Vec field21_0x64;
+    struct Vec field22_0x70;
+    struct Vec field23_0x7c;
+    struct Vec field24_0x88;
+    struct Vec field25_0x94;
+    s16 field26_0xa0;
+    s16 field27_0xa2;
+    s16 field28_0xa4;
+    float color_factor;
+    undefined field_0xaa[0x6];
 } __attribute__((__packed__));
 static_assert(sizeof(Effect) == 0xb0);
 
@@ -3368,7 +3378,7 @@ enum {
     PMT_CHALLENGE=1,
     PMT_PRACTICE=2,
     PMT_UNKNOWN3=3,
-    PMT_UNKNOWN4=4,
+    PMT_BILLIARDS=4,
     PMT_STORY_STAGE_SELECT=5,
     PMT_STORY_PLAY=6,
     PMT_UNKNOWN7=7
@@ -5464,7 +5474,7 @@ extern "C" {
     extern undefined thermal_management_interrupt_exception_handler;
     extern undefined4 osStringTablePtr;
     extern pointer switchdataD_80081a8c;
-    extern struct FontDefinition FONT_DEFINITIONS[64];
+    extern struct FontDefinition FONT_DEFINITIONS[144];
     extern undefined fullscreen_texture_buf;
     extern pointer switchdataD_80110c1c;
     extern undefined * switchdataD_80111e20;
@@ -5891,9 +5901,14 @@ extern "C" {
     extern char * challenge_play_pausemenu_entries[24];
     extern char * challenge_goal_pausemenu_entries[24];
     extern char PAUSEMENU_STAGE_SELECT_STRING[13];
+    extern char * practice_play_pausemenu_entries[36];
+    extern char * practice_goal_pausemenu_entries[36];
+    extern char PAUSEMENU_GUIDE_STRING[6];
     extern char * story_play_pausemenu_entries[36];
     extern char * story_goal_pausemenu_entries[36];
     extern char * * pausemenu_entry_pointers[16];
+    extern char PAUSEMENU_ON_STRING[3];
+    extern char PAUSEMENU_OFF_STRING[4];
     extern char LOADIN_TEXT_ROUND[9];
     extern char LOADIN_TEXT_WORLD[12];
     extern char LOADIN_TEXT_MASTER_EX[12];
@@ -6090,6 +6105,8 @@ extern "C" {
     extern u32 gx_fifo_use_size;
     extern BOOL32 g_video_mode_change_requested;
     extern struct ModeInfo mode_info;
+    extern undefined4 practice_best_score;
+    extern undefined4 is_practice_score_new_best;
     extern struct GmaBuffer * g_bg_gma;
     extern struct TplBuffer * g_bg_tpl;
     extern undefined4 active_sprite_draw_req_count;
@@ -9397,6 +9414,7 @@ extern "C" {
     void destroy_sprite_with_unique_id(SpriteUniqueID  unique_id);
     void dest_all_sprites(void);
     Sprite * get_sprite_with_unique_id(SpriteUniqueID  unique_id);
+    void calc_sprite_bounds(struct Sprite * sprite, s32 * left, s32 * top, s32 * right, s32 * bottom);
     void g_get_font_char_width(char * character, Font32  font, struct FontDefinition * g_font_struct);
     double g_get_font_char_width_scaling(char * character, Font32  font);
     void textdraw_reset(void);
@@ -9548,6 +9566,7 @@ extern "C" {
     void sprite_score_tick(u8 * status, struct Sprite * sprite);
     void sprite_score_disp(struct Sprite * sprite);
     void sprite_timer_ball_tick(u8 * status, struct Sprite * sprite);
+    void sprite_speed_tick(u8 * status, struct Sprite * sprite);
     void sprite_current_stage_display_tick(u8 * status, struct Sprite * sprite);
     void sprite_current_stage_display_disp(struct Sprite * sprite);
     void sprite_hud_stage_name_tick(u8 * status, struct Sprite * sprite);
@@ -9744,6 +9763,7 @@ extern "C" {
     void g_some_draw_func3(double param_1);
     void call_g_avdisp_set_ambient(double param_1, double param_2, double param_3);
     void avdisp_set_alpha(float param_1);
+    void g_some_cleanup_func(undefined param_1, undefined param_2, undefined param_3);
     undefined4 g_something_with_texture_scroll_2(int param_1);
     void g_stores_doubles(double param_1, double param_2, double param_3, double param_4);
     void g_stores_doubles2(double param_1, double param_2, double param_3, double param_4);

@@ -5568,7 +5568,7 @@
 8031F328:destroy_sprite_with_unique_id
 8031F3E0:dest_all_sprites
 8031F47C:get_sprite_with_unique_id
-8031F4E0:FUN_802492a8
+8031F4E0:calc_sprite_bounds
 8031F9A0:switchD
 8031F9A4:caseD_1
 8031F9A4:caseD_4
@@ -6246,7 +6246,7 @@
 803399D8:sprite_score_disp
 80339B48:FUN_80263910
 80339CEC:sprite_timer_ball_tick
-8033A02C:FUN_80263df4
+8033A02C:sprite_speed_tick
 8033A190:sprite_current_stage_display_tick
 8033A2BC:sprite_current_stage_display_disp
 8033A908:sprite_hud_stage_name_tick
@@ -7062,7 +7062,7 @@
 8037A558:FUN_802a4320
 8037A578:FUN_802a4340
 8037A5E8:FUN_802a43b0
-8037A608:FUN_802a43d0
+8037A608:g_some_cleanup_func
 8037A63C:g_something_with_texture_scroll_2
 8037A6A4:FUN_802a446c
 8037A6FC:g_stores_doubles
@@ -8317,9 +8317,14 @@
 8047EED4:challenge_play_pausemenu_entries
 8047EF94:challenge_goal_pausemenu_entries
 8047F02C:PAUSEMENU_STAGE_SELECT_STRING
+8047F08C:practice_play_pausemenu_entries
+8047F11C:practice_goal_pausemenu_entries
+8047F20C:PAUSEMENU_GUIDE_STRING
 8047F33C:story_play_pausemenu_entries
 8047F3CC:story_goal_pausemenu_entries
 8047F4A4:pausemenu_entry_pointers
+8047F4E4:PAUSEMENU_ON_STRING
+8047F4E8:PAUSEMENU_OFF_STRING
 8047F770:LOADIN_TEXT_ROUND
 8047F77C:LOADIN_TEXT_WORLD
 8047F788:LOADIN_TEXT_MASTER_EX
@@ -8566,6 +8571,8 @@
 8055399C:g_next_stage_id
 8055399E:g_some_cm_stage_id
 805539A2:g_some_stage_id
+805539AC:practice_best_score
+805539B0:is_practice_score_new_best
 80553AD8:g_bg_gma
 80553ADC:g_bg_tpl
 805542EC:active_sprite_draw_req_count
