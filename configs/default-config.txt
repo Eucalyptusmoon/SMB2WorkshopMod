@@ -79,7 +79,8 @@
 
 // smb1-camera-toggle
 //
-// Allows for the SMB1 camera to be toggled with the Z button mid-game.
+// Allows for the SMB1 camera to be toggled through the pausemenu, replacing
+// How to play.
 
 // story-fix-missing-w
 //
@@ -218,9 +219,8 @@
 
 // story-double-stage-select
 //
-// Adds an extra 'Stage select' button to Story Mode's pausemenu in place
-// of the 'Exit game' button and moves the 'Exit game' button to replace
-// 'How to play'
+// Adds an extra 'Stage select' button to Story Mode's pausemenu at the very bottom
+// and moves the 'Exit game' button above both
 
 // pause-cooldown
 //
