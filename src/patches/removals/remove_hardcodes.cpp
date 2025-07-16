@@ -23,6 +23,10 @@ void init_main_loop() {
     // Nop a call to handle hardcoded stage lights leftover from
     // SMB1
     patch::write_nop(reinterpret_cast<void*>(0x802945d8));
+    // Check for stage 0xffff instead of 190 for what stage's .gma/.tpl not to load
+    patch::write_word(reinterpret_cast<void*>(0x802c7350), 0x2c1fffff);
+    // Check for stage 0xffffffff when enabling a lighting hardcode instead of 200
+    patch::write_word(reinterpret_cast<void*>(0x80455ff8), 0xffffffff);
     // In the function which handles Bonus Wave's collision, nop
     // the part which decides what space has hardcoded collision
     patch::write_nop(reinterpret_cast<void*>(0x802c79b4));
