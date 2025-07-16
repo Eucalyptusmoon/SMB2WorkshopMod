@@ -167,6 +167,17 @@ void create_new_final_stage_sprite(u8* status, mkb::Sprite* sprite) {
     }
 }
 
+// The mtxa calls in these are the original function calls we branched from
+void fix_minimap() {
+    mkb::mtxa_from_mtxb();
+    mkb::g_scale_sprite_for_widescreen(0x248);
+}
+
+void fix_how_to() {
+    mkb::mtxa_from_identity();
+    mkb::g_scale_sprite_for_widescreen(0x140);
+}
+
 // Call our fixed create sprite functions in place of the originals, then
 // enlargen the pausemenu's dim area. Then, handle sprite type changes for
 // the "JUMP TO STAGE" sprite and continues remaining sprite
@@ -189,6 +200,12 @@ void init_main_loop() {
     patch::write_branch(
         reinterpret_cast<void*>(mkb::create_final_stage_sprite),
         reinterpret_cast<void*>(create_new_final_stage_sprite));
+    patch::write_branch_bl(
+        reinterpret_cast<void*>(0x8033c39c),
+        reinterpret_cast<void*>(fix_minimap));
+    patch::write_branch_bl(
+        reinterpret_cast<void*>(0x80338050),
+        reinterpret_cast<void*>(fix_how_to));
     patch::write_word(reinterpret_cast<void*>(0x803e7a28), 0x43b40000);
     patch::write_word(reinterpret_cast<void*>(0x8032e0e4), (0x6400a100));
     patch::write_word(reinterpret_cast<void*>(0x8032e798), (0x6400a100));
@@ -198,10 +215,11 @@ void init_main_loop() {
 
 // The SEL_NGC check fixes less being visible vertically when playing in widescreen.
 // It only activates when we're not in menus as calibration breaks visually otherwise.
-// The MD_GAME check fixes the View Stage aspect ratio when in widescreen.The rest
+// The MD_GAME check fixes the View Stage aspect ratio when in widescreen. The rest
 // changes the JUMP TO STAGE and continues remaining sprite position pointers and values
 // in widescreen since there's not enough space in their create functions to add a
-// widescreen translation field
+// widescreen translation field, apart from the last two which edit values in the
+// How to play menu
 
 void tick() {
     if (mkb::sub_mode == mkb::SMD_SEL_NGC_MAIN) {
@@ -222,12 +240,16 @@ void tick() {
         patch::write_word(reinterpret_cast<void*>(0x8032e048), (0xc01f0038));
         patch::write_word(reinterpret_cast<void*>(0x8032e6b0), (0xc01f0038));
         patch::write_word(reinterpret_cast<void*>(0x803e7cf4), (0x43f50000));
+        patch::write_word(reinterpret_cast<void*>(0x803e82f8), (0x40590000));
+        patch::write_word(reinterpret_cast<void*>(0x803e8404), (0x44200000));
     }
     else {
         patch::write_word(reinterpret_cast<void*>(0x8032e048), (0xc01f00ac));
         patch::write_word(reinterpret_cast<void*>(0x803e7a3c), (0x43d98000));
         patch::write_word(reinterpret_cast<void*>(0x8032e6b0), (0xc01f00ac));
         patch::write_word(reinterpret_cast<void*>(0x803e7cf4), (0x4414c000));
+        patch::write_word(reinterpret_cast<void*>(0x803e82f8), (0x405b8000));
+        patch::write_word(reinterpret_cast<void*>(0x803e8404), (0x44558000));
     }
 }
 
