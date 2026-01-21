@@ -11,7 +11,6 @@ namespace goal_type_sprites {
 TICKABLE_DEFINITION((
         .name = "goal-type-sprites",
         .description = "Goal type sprites",
-        .enabled = true,
         .init_main_loop = init_main_loop, ))
 
 
