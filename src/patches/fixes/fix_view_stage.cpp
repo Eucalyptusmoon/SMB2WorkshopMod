@@ -29,7 +29,7 @@ void new_render_func(void) {
     mkb::mtxa_rotate_y((s16) ((int) mkb::view_stage_timer << 9));
     mkb::load_gx_pos_nrm_mtx(mkb::mtxa, 0);
     mkb::avdisp_draw_model_culled_sort_auto(mkb::init_common_gma->model_entries[0x4d].model);
-    mkb::g_some_draw_func();
+    mkb::fade_color_base_default();
     if (mkb::stage_gma != (mkb::GmaBuffer*) 0x0) {
         pSVar10 = mkb::stagedef->coli_header_list;
         pIVar11 = mkb::itemgroups;
@@ -91,7 +91,7 @@ void new_render_func(void) {
                     if (dVar12 < (double) (pSVar8->scale).z) {
                         dVar12 = (double) (pSVar8->scale).z;
                     }
-                    mkb::g_some_draw_func3(dVar12);
+                    mkb::avdisp_set_scale_factor(dVar12);
                     pGVar3 = (mkb::GmaModel*) mkb::g_some_draw_func4(dVar12, (int) pSVar8->stage_model_a);
                     if ((pGVar3 != (mkb::GmaModel*) 0x0) &&
                         (bVar4 = mkb::g_is_sphere_visible((double) (float) ((double) pGVar3->bound_sphere_radius *

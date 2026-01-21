@@ -142,11 +142,15 @@ typedef undefined2 StobjType;
 
 typedef struct Vec Vec, *PVec;
 
+typedef struct ColiPlane ColiPlane, *PColiPlane;
+
 typedef struct GmaModel GmaModel, *PGmaModel;
 
 typedef struct S16Vec S16Vec, *PS16Vec;
 
 typedef signed char s8;
+
+typedef ushort u16;
 
 enum { /* Per-GMA model attributes */
     GCMF_ATTR_16BIT=1,
@@ -155,8 +159,6 @@ enum { /* Per-GMA model attributes */
     GCMF_ATTR_EFFECTIVE_MODEL=16
 };
 typedef undefined4 GcmfAttributes;
-
-typedef ushort u16;
 
 typedef struct GXTexObj GXTexObj, *PGXTexObj;
 
@@ -191,6 +193,21 @@ enum {
     GX_TF_A8=32
 };
 typedef undefined4 GXTexFmt;
+
+struct Vec {
+    float x;
+    float y;
+    float z;
+} __attribute__((__packed__));
+static_assert(sizeof(Vec) == 0xc);
+
+struct ColiPlane {
+    struct Vec point;
+    struct Vec normal;
+    u16 g_flags1;
+    u16 g_flags2;
+} __attribute__((__packed__));
+static_assert(sizeof(ColiPlane) == 0x1c);
 
 struct S16Vec { /* Often used for rotations */
     s16 x;
@@ -231,13 +248,6 @@ struct GXTexObj {
 } __attribute__((__packed__));
 static_assert(sizeof(GXTexObj) == 0x20);
 
-struct Vec {
-    float x;
-    float y;
-    float z;
-} __attribute__((__packed__));
-static_assert(sizeof(Vec) == 0xc);
-
 struct PhysicsBall { /* A representation of a Ball with just the physics/collision-related info */
     dword flags;
     struct Vec pos;
@@ -246,12 +256,10 @@ struct PhysicsBall { /* A representation of a Ball with just the physics/collisi
     float radius;
     float acceleration;
     float restitution;
-    dword g_jerk;
-    undefined field_0x38[0xc];
-    struct Vec g_some_vec;
-    undefined field_0x50[0x4];
-    dword field25_0x54;
-    float field26_0x58;
+    dword hardest_coli_speed;
+    struct ColiPlane hardest_coli_plane;
+    dword hardest_coli_ig_idx;
+    float friction;
     dword itemgroup_idx; /* The itemgroup that this PhysicsBall is relative to, aka in the local space of */
 } __attribute__((__packed__));
 static_assert(sizeof(PhysicsBall) == 0x60);
@@ -315,6 +323,8 @@ static_assert(sizeof(GmaModel) == 0x40);
 
 typedef struct MenuScreen MenuScreen, *PMenuScreen;
 
+typedef uchar u8;
+
 typedef struct MenuEntry MenuEntry, *PMenuEntry;
 
 typedef uint uint32_t;
@@ -350,10 +360,12 @@ enum {
 typedef undefined1 MenuScreenID;
 
 struct MenuScreen {
-    struct MenuEntry * menu_entries; /* Nullable */
+    u8 field0_0x0;
+    u8 entry_count;
+    undefined field_0x2[0x2];
+    struct MenuEntry * entries;
     void * tick;
-    u32 g_some_bitflag; /* 0x40 repositions stuff and makes stuff up/down controls */
-    undefined field_0xc[0x4];
+    u32 bitflag; /* 0x40 repositions stuff and makes stuff up/down controls */
 } __attribute__((__packed__));
 static_assert(sizeof(MenuScreen) == 0x10);
 
@@ -789,8 +801,6 @@ enum { /* I added DIP_NONE -Crafted */
 typedef undefined4 DipSwitch;
 
 typedef struct Replay Replay, *PReplay;
-
-typedef uchar u8;
 
 struct Replay { /* Unknown size atm */
     undefined field_0x0[0x4];
@@ -1578,7 +1588,8 @@ struct Sprite {
     s32 top;
     s32 right;
     s32 bottom;
-    undefined field_0x7c[0x4];
+    u16 rot;
+    u16 field50_0x7e;
     float alpha; /* called trnsl in game? */
     struct Rgb24 add_color;
     undefined field_0x87[0x1];
@@ -2185,7 +2196,7 @@ struct Ball {
     int field48_0x108;
     struct Vec ape_facedir_point; /* The point of interest that the monkey looks at (goal, banana, etc) */
     float something_with_ape_facedir; /* Approaches 1 the closer you are to the point of interest */
-    struct Vec g_last_collision_normal; /* Maybe inverse of the normal of the last triangle collided with? */
+    struct Vec g_last_coli_normal; /* Maybe inverse of the normal of the last triangle collided with? */
     undefined field_0x128[0x4];
     dword g_race_flags;
     short g_other_counter;
@@ -2293,7 +2304,7 @@ typedef struct Itemgroup Itemgroup, *PItemgroup;
 
 struct Itemgroup { /* Contains the current animation-related state of each item group in a stage (each thing corresponding to a collision header in the stagedef) */
     dword playback_state; /* Corresponding to the switch playback type which is controlling the item group, see PlaybackState */
-    dword anim_frame;
+    s32 anim_frame;
     struct Vec position;
     struct Vec prev_position;
     struct S16Vec rotation;
@@ -3033,7 +3044,7 @@ struct ModeInfo { /* I don't know what to call this, but there's some important 
     undefined2 cm_course_stage_num; /* Current course stage num, updated immediately after completing stage */
     undefined2 g_some_stage_jump_distance;
     undefined4 bananas_remaining;
-    undefined2 field12_0x28;
+    u16 death_count;
     undefined2 continues_used;
     undefined2 g_next_stage_id2;
     s16 cm_stage_id; /* Current challenge mode stage id, updated immediately after finishing stage */
@@ -3339,37 +3350,27 @@ typedef undefined4 StageModelEffectBitfield;
 typedef struct Effect Effect, *PEffect;
 
 struct Effect {
-    word pool_id;
+    word g_idx;
     short id;
-    u32 flags;
+    undefined field_0x4[0x4];
     EffectType  type;
-    s16 state;
-    s32 timer;
-    s32 g_other_timer;
-    s16 ball_idx;
-    u16 cameras;
-    float field9_0x18;
-    float field10_0x1c;
-    float field11_0x20;
-    struct Vec scale;
-    struct GmaModel * model;
-    struct Vec pos;
-    struct Vec vel;
-    struct S16Vec rot;
-    s16 field17_0x52;
-    s16 field18_0x54;
-    s16 field19_0x56;
+    undefined field_0xa[0x2];
+    s32 field9_0xc;
+    undefined field_0x10[0x4];
+    undefined2 g_ball_idx;
+    s16 field15_0x16;
+    undefined field_0x18[0xc];
+    struct Vec g_scale;
+    s32 g_pointer_to_some_struct;
+    struct Vec g_pos;
+    struct Vec g_some_vec;
+    struct S16Vec g_some_rot;
+    undefined field_0x52[0x6];
     struct Vec g_prev_pos;
-    struct Vec field21_0x64;
-    struct Vec field22_0x70;
-    struct Vec field23_0x7c;
-    struct Vec field24_0x88;
-    struct Vec field25_0x94;
-    s16 field26_0xa0;
-    s16 field27_0xa2;
-    s16 field28_0xa4;
-    float color_factor;
-    undefined field_0xaa[0x6];
+    undefined field_0x64[0x28];
+    struct Vec g_some_vec2;
+    struct Vec g_some_vec3;
+    undefined field_0xa4[0xc];
 } __attribute__((__packed__));
 static_assert(sizeof(Effect) == 0xb0);
 
@@ -3384,6 +3385,16 @@ enum {
     PMT_UNKNOWN7=7
 };
 typedef undefined4 PauseMenuType;
+
+typedef struct ShadowReceive ShadowReceive, *PShadowReceive;
+
+struct ShadowReceive {
+    void * ptr1;
+    u16 val1;
+    u16 val2;
+    void * ptr2;
+} __attribute__((__packed__));
+static_assert(sizeof(ShadowReceive) == 0xc);
 
 typedef struct ytgut ytgut, *Pytgut;
 
@@ -3441,6 +3452,21 @@ enum {
     PLAYBACK_FAST_BACKWARD=4
 };
 typedef undefined2 PlaybackState;
+
+typedef struct OrdTblData OrdTblData, *POrdTblData;
+
+struct OrdTblData {
+    Mtx matrices[5];
+    struct OrdTblNode * entries;
+    s32 max_entries;
+    float depth_offset;
+    float min_depth;
+    float max_depth;
+    struct OrdTblNode * last_entry;
+    struct OrdTblNode * first_entry;
+    float depth_range;
+} __attribute__((__packed__));
+static_assert(sizeof(OrdTblData) == 0x110);
 
 enum { /* Options for rendering text with font */
     TEXTDRAW_FLAG_BORDER=536870912,
@@ -3800,7 +3826,7 @@ typedef undefined2 StagedefAnimType;
 
 typedef struct StagedefColiTri StagedefColiTri, *PStagedefColiTri;
 
-typedef struct StagedefMystery5 StagedefMystery5, *PStagedefMystery5;
+typedef struct GStagedefBoundSphere GStagedefBoundSphere, *PGStagedefBoundSphere;
 
 typedef struct StagedefBackgroundAnim2Header StagedefBackgroundAnim2Header, *PStagedefBackgroundAnim2Header;
 
@@ -3917,15 +3943,6 @@ struct StagedefBanana {
 } __attribute__((__packed__));
 static_assert(sizeof(StagedefBanana) == 0x10);
 
-struct StagedefMystery5 {
-    undefined field_0x0[0x4];
-    float field4_0x4;
-    float field5_0x8;
-    float field6_0xc;
-    float field7_0x10;
-} __attribute__((__packed__));
-static_assert(sizeof(StagedefMystery5) == 0x14);
-
 struct StagedefColiCone {
     struct Vec position;
     struct S16Vec rotation;
@@ -3971,6 +3988,15 @@ struct StagedefColiTri {
     struct Vec2d bitangent;
 } __attribute__((__packed__));
 static_assert(sizeof(StagedefColiTri) == 0x40);
+
+struct GStagedefBoundSphere {
+    undefined field_0x0[0x4];
+    float field4_0x4;
+    float field5_0x8;
+    float field6_0xc;
+    float field7_0x10;
+} __attribute__((__packed__));
+static_assert(sizeof(GStagedefBoundSphere) == 0x14);
 
 struct StagedefGoal {
     struct Vec position;
@@ -4143,15 +4169,15 @@ struct StagedefColiHeader {
     u32 button_count;
     struct StagedefButton * button_list;
     undefined field_0xb0[0x4];
-    struct StagedefMystery5 * mystery5;
+    struct GStagedefBoundSphere * g_bound_sphere;
     float seesaw_sensitivity; /* Higher is more sensitive, negative makes the seesaw reversed */
     float seesaw_friction; /* Lower is looser */
     float seesaw_spring; /* 0 prevents the seesaw from resetting */
     u32 wormhole_count;
     struct StagedefWormhole * wormhole_list;
     u32 initial_playback_state; /* Should this be split into 2x padding bytes + PlaybackState enum? */
-    undefined field_0xd0[0x4];
-    float anim_loop_point_seconds;
+    float loop_start_sec;
+    float loop_end_sec;
     struct StagedefTextureScroll * texture_scroll;
     undefined field_0xdc[0x3c0];
 } __attribute__((__packed__));
@@ -5581,7 +5607,9 @@ extern "C" {
     extern f32 projection_near_clip;
     extern f32 projection_far_clip;
     extern Mtx44 g_some_projection_matrix;
-    extern undefined4 g_some_gmaflag_1;
+    extern undefined1 g_some_gmaflag_1;
+    extern undefined1 g_some_gmaflag_2;
+    extern undefined1 g_some_gmaflag_3;
     extern pointer INIT_REL_PATHS[2];
     extern OSHeapHandle currentHeap;
     extern undefined4 arena_lo;
@@ -5828,6 +5856,7 @@ extern "C" {
     extern undefined2 g_something_with_world_theme_5;
     extern struct Ape * * BGApeTable;
     extern undefined4 g_smth_with_bg_models;
+    extern struct GXColor background_colors[42];
     extern undefined bg_init_funcs;
     extern undefined bg_tick_funcs;
     extern undefined bg_dest_funcs;
@@ -5919,8 +5948,11 @@ extern "C" {
     extern char LOADIN_TEXT_FINAL_ROUND[12];
     extern char LOADIN_TEXT_FINAL_STAGE[12];
     extern undefined stage_name_tilde_fmt_string;
+    extern char JUMP_TO_STAGE_STRING[17];
     extern undefined * switchdataD_803a96f8;
     extern char SPRITE_1UP_TEXT_STRING[4];
+    extern char GO_TO_THE_STAGE_STRING[6];
+    extern char POSTGOAL_SPRITES_STAGE_STRING[15];
     extern undefined * switchdataD_803a9e6c;
     extern pointer switchdataD_803a9ea4;
     extern undefined * switchdataD_803a9ee8;
@@ -6012,7 +6044,8 @@ extern "C" {
     extern struct NlBuffer * g_stage_nl_buf;
     extern struct NlBuffer * * g_init_common_gma_buf;
     extern struct ScenInfo scen_info;
-    extern Mtx * g_ord_tbl_stuff;
+    extern struct OrdTblData * g_ord_tbl_stuff;
+    extern struct OrdTblData * ord_tbl_data;
     extern undefined4 is_more_than_24_mib;
     extern undefined4 g_some_buffer_ptr;
     extern undefined4 g_some_other_heap_lo;
@@ -6085,6 +6118,9 @@ extern "C" {
     extern undefined1 stageselect_category_selected;
     extern undefined1 g_last_selected_bowling_difficulty;
     extern undefined4 g_auto_reload_setting;
+    extern undefined1 bat_first_setting;
+    extern undefined1 number_of_innings_setting;
+    extern undefined1 baseball_com_level_setting;
     extern undefined4 menu_tick_func;
     extern undefined4 menu_draw_func;
     extern struct RelBufferInfo g_some_sel_ngc_rel_buffer;
@@ -6193,6 +6229,7 @@ extern "C" {
     extern undefined4 current_world_info;
     extern int g_some_frame_counter;
     extern float g_some_frame_counter_float;
+    extern undefined1 g_some_coli_nonsense1;
     extern undefined4 g_some_gameplay_flags;
     extern int * g_some_draw_var;
     extern struct Itemgroup * itemgroups;
@@ -6585,8 +6622,9 @@ extern "C" {
     extern undefined menu_option_game_data_entries;
     extern undefined menu_option_controller_entries;
     extern undefined menu_option_screen_entries;
-    extern struct MenuScreen menu_screen_list[87];
+    extern struct MenuScreen menu_screen_list[88];
     extern pointer switchdataD_80580b70;
+    extern undefined menu_bmp_ids;
     extern char SPRITE_BUTTON_LESSON_TEXT[7];
     extern char SPRITE_BUTTON_TUTORIAL_TEXT[9];
     extern undefined * switchdataD_805837fc;
@@ -6758,7 +6796,7 @@ extern "C" {
     void load_run_main_loop_parent1(void);
     uint read_and_set_os_string_table(void);
     void load_main_loop_rel_and_run(char * rel_filepath, struct RelBufferInfo * buffer_info);
-    OSModuleInfo * * unload_main_loop_rel(struct OSModuleInfo * * mainLoopBufPtrs);
+    int * unload_main_loop_rel(int * mainLoopBufPtrs);
     void load_common_gma_tpl(void);
     void set_init_rel_index(u32 index);
     undefined4 g_clear_prev_GX_settings_something1(void);
@@ -6799,7 +6837,7 @@ extern "C" {
     void GXSetNumChans_cached(u8 nChans);
     void opti_GXSetChanCtrl(GXChannelID  chan, GXBool enable, GXColorSrc  amb_src, GXColorSrc  mat_src, u32 light_mask, GXDiffuseFn  diff_fn, GXAttnFn  attn_fn);
     void GXSetZMode_cached(GXBool compare_enable, GXCompare  func, GXBool update_enable);
-    void g_read_something_from_prev_GX_settings(undefined * param_1, undefined4 * param_2, undefined * param_3);
+    void g_read_something_from_prev_GX_settings(undefined1 * param_1, undefined4 * param_2, undefined1 * param_3);
     void g_set_some_gx_settings(void);
     void g_draw_something(double param_1, double param_2, double param_3, ushort * param_4);
     void mark_finished_waiting_for_dvdread(s32 result, struct DVDFileInfo * file_info);
@@ -6909,7 +6947,7 @@ extern "C" {
     void DMAErrorHandler(undefined4 param_1, undefined4 * param_2);
     void __OSCacheInit(void);
     undefined8 __OSLoadFPUContext(undefined8 param_1, undefined4 param_2, int param_3);
-    void __OSSaveFPUContext(undefined8 param_1, undefined8 param_2, undefined8 param_3, undefined8 param_4, undefined8 param_5, undefined8 param_6, undefined8 param_7, undefined8 param_8, undefined8 param_9, undefined8 param_10, undefined8 param_11_00, undefined8 param_12, undefined8 param_13, undefined4 param_14, undefined4 param_15, int param_16);
+    void __OSSaveFPUContext(double param_1, double param_2, double param_3, double param_4, double param_5, double param_6, double param_7, double param_8, undefined4 param_9, undefined4 param_10, int param_11);
     void OSSetCurrentContext(struct OSContext * context);
     OSContext * OSGetCurrentContext(void);
     undefined4 OSSaveContext(int param_1);
@@ -6973,9 +7011,9 @@ extern "C" {
     undefined4 __OSSyncSram(void);
     uint __OSReadROM(void * param_1, u32 param_2, int param_3);
     u32 OSGetSoundMode(void);
-    void OSSetSoundMode(uint param_1);
+    void OSSetSoundMode(byte param_1);
     u32 OSGetProgressiveMode(void);
-    void OSSetProgressiveMode(uint param_1);
+    void OSSetProgressiveMode(char param_1);
     undefined2 OSGetWirelessID(int param_1);
     void OSSetWirelessID(int param_1, short param_2);
     void __OSInitSystemCall(void);
@@ -7024,7 +7062,7 @@ extern "C" {
     uint SIDisablePolling(uint param_1);
     bool SIGetResponseRaw(int param_1);
     int SIGetResponse(int param_1, undefined4 * param_2);
-    undefined4 SITransfer(uint param_1, undefined4 * param_2, int param_3, undefined4 param_4, int param_5, int param_6, uint param_7, uint param_8);
+    undefined4 SITransfer(uint param_1, undefined4 * param_2, int param_3, undefined4 param_4, int param_5, int param_6, int param_7, uint param_8);
     void GetTypeCallback(uint param_1, uint param_2);
     int SIGetType(uint param_1);
     int SIGetTypeAsync(uint param_1, undefined * param_2);
@@ -7049,7 +7087,7 @@ extern "C" {
     undefined4 EXILock(int param_1, int param_2, int param_3);
     undefined4 EXIUnlock(int param_1);
     undefined4 sndReadFlag(int param_1);
-    undefined4 EXIGetID(int param_1, int param_2, undefined4 * param_3);
+    undefined4 EXIGetID(int param_1, int param_2, byte * param_3);
     undefined4 InitializeUART(void);
     undefined4 WriteUARTN(byte * param_1, uint param_2);
     void DBInit(void);
@@ -7057,20 +7095,20 @@ extern "C" {
     void __DBExceptionDestination(void);
     uint __DBIsExceptionMarked(uint param_1);
     void DBPrintf(void);
-    undefined8 PSMTXIdentity(int param_1);
-    undefined8 PSMTXCopy(int param_1, int param_2);
-    undefined8 PSMTXConcat(int param_1, int param_2, int param_3);
-    undefined4 PSMTXInverse(int param_1, int param_2);
+    undefined8 PSMTXIdentity(short * param_1);
+    undefined8 PSMTXCopy(float * param_1, float * param_2);
+    undefined8 PSMTXConcat(float * param_1, float * param_2, float * param_3);
+    undefined4 PSMTXInverse(float * param_1, float * param_2);
     void PSMTXScale(double param_1, double param_2, double param_3, float * param_4);
     void C_MTXLookAt(Mtx * mtx, struct Vec * cam_pos, struct Vec * cam_up, struct Vec * target);
     void C_MTXFrustum(double param_1, double param_2, double param_3, double param_4, double param_5, double param_6, float * param_7);
     void C_MTXPerspective(Mtx44 * m, double fovy, double aspect, double n, double f);
     void C_MTXOrtho(double param_1, double param_2, double param_3, double param_4, double param_5, double param_6, float * m);
-    void PSVECAdd(int param_1, int param_2, int param_3);
-    void PSVECSubtract(int param_1, int param_2, int param_3);
-    void PSVECScale(undefined8 param_1, int param_2, int param_3);
-    undefined8 PSVECNormalize(int param_1, int param_2);
-    undefined8 PSVECCrossProduct(int param_1, int param_2, int param_3);
+    void PSVECAdd(float * param_1, float * param_2, float * param_3);
+    void PSVECSubtract(float * param_1, float * param_2, float * param_3);
+    void PSVECScale(double param_1, float * param_2, float * param_3);
+    undefined8 PSVECNormalize(float * param_1, float * param_2);
+    undefined8 PSVECCrossProduct(float * param_1, float * param_2, float * param_3);
     void __DVDInitWA(void);
     void AlarmHandlerForTimeout(undefined4 param_1, struct OSContext * param_2);
     void Read(undefined4 param_1, uint param_2, uint param_3, undefined4 param_4);
@@ -7147,7 +7185,7 @@ extern "C" {
     void __DVDPrepareResetAsync(undefined * param_1);
     void __DVDClearWaitingQueue(void);
     undefined4 __DVDPushWaitingQueue(int param_1, undefined4 * param_2);
-    int * * __DVDPopWaitingQueue(void);
+    int * __DVDPopWaitingQueue(void);
     undefined4 __DVDCheckWaitingQueue(void);
     undefined4 __DVDDequeueWaitingQueue(int * param_1);
     char ErrorCode2Num(uint param_1);
@@ -7210,7 +7248,7 @@ extern "C" {
     void __AICallbackStackSwitch(undefined * param_1);
     void __AI_SRC_INIT(void);
     ushort ARGetDMAStatus(void);
-    void ARStartDMA(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4);
+    void ARStartDMA(short param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4);
     undefined4 ARInit(undefined4 param_1, undefined4 param_2);
     undefined4 ARGetBaseAddress(void);
     void __ARHandler(undefined4 param_1, struct OSContext * param_2);
@@ -7271,7 +7309,7 @@ extern "C" {
     int __CARDEraseSector(int param_1, uint param_2, int param_3);
     void CARDInit(void);
     void __CARDSetDiskID(undefined * param_1);
-    undefined4 __CARDGetControlBlock(int param_1, int * * param_2);
+    undefined4 __CARDGetControlBlock(int param_1, undefined4 * param_2);
     int __CARDPutControlBlock(int * param_1, int param_2);
     s32 CARDGetResultCode(int param_1);
     int CARDFreeBlocks(int param_1, int * param_2, int * param_3);
@@ -7322,7 +7360,7 @@ extern "C" {
     undefined4 return_0(void);
     void CreateCallbackFat(int param_1, int param_2);
     void CARDCreateAsync(s32 chan, char * fileName, u32 size, struct CARDFileInfo * fileInfo, void * callback);
-    int __CARDSeek(int * param_1, int param_2, uint param_3, int * * param_4);
+    int __CARDSeek(int * param_1, int param_2, uint param_3, undefined4 * param_4);
     void ReadCallback(int param_1, int param_2);
     s32 CARDReadAsync(struct CARDFileInfo * fileInfo, void * buf, s32 length, s32 offset, void * callback);
     void WriteCallback(int param_1, int param_2);
@@ -7443,7 +7481,7 @@ extern "C" {
     GXTexWrapMode GXGetTexObjWrapS(struct GXTexObj * obj);
     GXTexWrapMode GXGetTexObjWrapT(struct GXTexObj * obj);
     GXBool GXGetTexObjMipMap(struct GXTexObj * obj);
-    void g_GX_something(uint * param_1, uint * param_2, uint * param_3, float * param_4, float * param_5, float * param_6, byte * param_7, undefined * param_8, uint * param_9);
+    void g_GX_something(uint * param_1, uint * param_2, uint * param_3, float * param_4, float * param_5, float * param_6, byte * param_7, undefined1 * param_8, uint * param_9);
     void GXLoadTexObjPreLoaded(struct GXTexObj * obj, struct GXTexRegion * region, GXTexMapID  id);
     void GXLoadTexObj(struct GXTexObj * obj, GXTexMapID  id);
     void GXInitTexCacheRegion(struct GXTexRegion * region, GXBool is_32b_mipmap, u32 tmem_even, GXTexCacheSize  size_even, u32 tmem_odd, GXTexCacheSize  size_odd);
@@ -7500,9 +7538,9 @@ extern "C" {
     void GXSetProjection(f32 mtx[4][4], GXProjectionType  type);
     void GXSetProjectionv(f32 * ptr);
     void GXGetProjectionv(float * ptr);
-    undefined8 WriteMTXPS4x3(int param_1, undefined4 param_2);
-    void WriteMTXPS3x3from3x4(int param_1, undefined4 * param_2);
-    undefined8 WriteMTXPS4x2(int param_1, undefined4 param_2);
+    undefined8 WriteMTXPS4x3(float * param_1, float * param_2);
+    void WriteMTXPS3x3from3x4(float * param_1, float * param_2);
+    undefined8 WriteMTXPS4x2(float * param_1, float * param_2);
     void GXLoadPosMtxImm(float mtxPtr[3][4], u32 id);
     void GXLoadNrmMtxImm(float mtxPtr[3][4], u32 id);
     void GXSetCurrentMtx(u32 id);
@@ -7523,7 +7561,7 @@ extern "C" {
     BOOL32 ARCOpen(struct ARCHandle * arc_handle, char * file, struct ArcFileInfo * arcFileInfo);
     uint arc_path_to_entrynum(struct ARCHandle * arcHandle, char * file);
     void arc_get_dir(int param_1, int param_2, int param_3);
-    int ARCGetStartAddrInMem(int * * param_1);
+    int ARCGetStartAddrInMem(undefined4 * param_1);
     undefined4 arcGetLength(struct ArcFileInfo * fileInfo);
     undefined4 return_1(void);
     void g_some_perf_init_func(void);
@@ -7553,7 +7591,7 @@ extern "C" {
     uint GetPublicId(int param_1);
     uint seqGetPrivateId(uint param_1);
     void empty_function(void);
-    uint seqStartPlay(int * param_1, int * param_2, int param_3, int * param_4, uint * param_5, undefined param_6, undefined2 param_7);
+    uint seqStartPlay(int param_1, int param_2, int param_3, int * param_4, uint * param_5, undefined1 param_6, undefined2 param_7);
     void HandleMasterTrack(uint param_1);
     void StartPause(int * param_1);
     void seqPause(uint param_1);
@@ -7576,10 +7614,10 @@ extern "C" {
     void synthSetBpm(int param_1, byte param_2, uint param_3);
     undefined4 synthGetTicksPerSecond(int param_1);
     void synthInitPortamento(int param_1);
-    int * do_voice_portamento(byte param_1, char param_2, char param_3, int param_4, undefined4 * param_5);
-    int * StartLayer(undefined2 param_1, int param_2, undefined4 param_3, undefined4 param_4, uint param_5, byte param_6, uint param_7, uint param_8, byte param_9, undefined param_10, ushort param_11, undefined2 param_12, int param_13, undefined param_14, undefined param_15, int param_16);
-    int * StartKeymap(undefined2 param_1, short param_2, undefined4 param_3, undefined4 param_4, uint param_5, byte param_6, uint param_7, uint param_8, byte param_9, undefined param_10, ushort param_11, undefined2 param_12, uint param_13, undefined param_14, undefined param_15, int param_16);
-    int * synthStartSound(uint param_1, int param_2, undefined4 param_3, uint param_4, byte param_5, uint param_6, uint param_7, uint param_8, undefined param_9, ushort param_10, undefined2 param_11, undefined param_12, short param_13, undefined param_14, int param_15);
+    uint do_voice_portamento(byte param_1, char param_2, char param_3, int param_4, undefined4 * param_5);
+    uint StartLayer(undefined2 param_1, int param_2, undefined4 param_3, undefined4 param_4, uint param_5, byte param_6, uint param_7, uint param_8, byte param_9, undefined1 param_10, ushort param_11, undefined2 param_12, int param_13, undefined1 param_14, undefined1 param_15, int param_16);
+    int * StartKeymap(undefined2 param_1, short param_2, undefined4 param_3, undefined4 param_4, uint param_5, byte param_6, uint param_7, uint param_8, byte param_9, undefined1 param_10, ushort param_11, undefined2 param_12, uint param_13, undefined1 param_14, undefined1 param_15, int param_16);
+    int * synthStartSound(uint param_1, int param_2, undefined4 param_3, uint param_4, byte param_5, uint param_6, uint param_7, uint param_8, undefined1 param_9, ushort param_10, undefined2 param_11, undefined1 param_12, short param_13, undefined1 param_14, int param_15);
     void synthAddJob(int * param_1, int * param_2, uint param_3);
     void synthStartSynthJobHandling(int * param_1);
     void synthForceLowPrecisionUpdate(int * param_1);
@@ -7587,14 +7625,14 @@ extern "C" {
     void HandleJobQueue(int * param_1, undefined * param_2);
     void HandleFaderTermination(int param_1);
     void synthHandle(uint param_1);
-    int * synthFXStart(undefined2 param_1, byte param_2, uint param_3, undefined param_4, int param_5);
+    int * synthFXStart(undefined2 param_1, byte param_2, uint param_3, undefined1 param_4, uint param_5);
     undefined4 synthFXSetCtrl(uint param_1, byte param_2, byte param_3);
     undefined4 synthFXSetCtrl14(uint param_1, byte param_2, uint param_3);
     void synthFXCloneMidiSetup(int param_1, int param_2);
     undefined4 synthSendKeyOff(uint param_1);
-    void synthVolume(uint param_1, uint param_2, uint param_3, undefined param_4, undefined4 param_5);
+    void synthVolume(uint param_1, uint param_2, uint param_3, undefined1 param_4, undefined4 param_5);
     undefined4 synthIsFadeOutActive(uint param_1);
-    void synthSetMusicVolumeType(uint param_1, undefined param_2);
+    void synthSetMusicVolumeType(uint param_1, undefined1 param_2);
     void synthInit(undefined4 param_1, int param_2);
     void sndSeqSpeed(uint param_1, undefined2 param_2);
     void sndSeqContinue(uint param_1);
@@ -7610,7 +7648,7 @@ extern "C" {
     void sndVolume(uint param_1, uint param_2, uint param_3);
     void sndMasterVolume(uint param_1, uint param_2, char param_3, char param_4);
     void sndSetAuxProcessingCallbacks(uint param_1, int param_2, undefined4 param_3, char param_4, uint param_5, int param_6, undefined4 param_7, char param_8, uint param_9);
-    void synthActivateStudio(uint param_1, undefined param_2, undefined4 param_3);
+    void synthActivateStudio(uint param_1, undefined1 param_2, undefined4 param_3);
     void synthDeactivateStudio(uint param_1);
     void synthAddStudioInput(uint param_1, byte * param_2);
     void synthRemoveStudioInput(uint param_1, int param_2);
@@ -7620,8 +7658,8 @@ extern "C" {
     void streamKill(int param_1);
     int GetPrivateIndex(int param_1);
     void sndStreamARAMUpdate(int param_1, uint param_2, uint param_3, uint param_4, uint param_5);
-    void CheckOutputMode(undefined * param_1, undefined * param_2);
-    int sndStreamAllocEx(undefined param_1, undefined4 param_2, int param_3, undefined4 param_4, undefined param_5, undefined param_6, undefined param_7, undefined param_8, undefined param_9, undefined param_10, uint param_11, undefined4 param_12, undefined4 param_13, undefined2 * param_14);
+    void CheckOutputMode(undefined1 * param_1, undefined1 * param_2);
+    int sndStreamAllocEx(undefined1 param_1, undefined4 param_2, int param_3, undefined4 param_4, undefined1 param_5, undefined1 param_6, undefined1 param_7, undefined1 param_8, undefined1 param_9, undefined1 param_10, uint param_11, undefined4 param_12, undefined4 param_13, undefined2 * param_14);
     uint sndStreamAllocLength(int param_1, uint param_2);
     void sndStreamADPCMParameter(int param_1, undefined2 * param_2);
     void sndStreamFrq(int param_1, undefined4 param_2);
@@ -7678,13 +7716,13 @@ extern "C" {
     void UnYieldMacro(int * param_1, int param_2);
     void macMakeActive(int * param_1);
     void macMakeInactive(int param_1, int param_2);
-    int * macStart(uint param_1, byte param_2, byte param_3, short param_4, byte param_5, undefined param_6, undefined param_7, uint param_8, byte param_9, undefined param_10, ushort param_11, undefined param_12, byte param_13, undefined param_14, undefined param_15, int param_16);
+    uint macStart(uint param_1, byte param_2, byte param_3, short param_4, byte param_5, undefined1 param_6, undefined1 param_7, uint param_8, byte param_9, undefined1 param_10, ushort param_11, undefined1 param_12, byte param_13, undefined1 param_14, undefined1 param_15, int param_16);
     void macInit(void);
     int vidInit(void);
     undefined4 * get_vidlist(uint param_1);
     void vidRemoveVoiceReferences(int param_1);
     undefined4 vidMakeRoot(int param_1);
-    int * vidMakeNew(int param_1, int param_2);
+    uint vidMakeNew(int param_1, int param_2);
     undefined4 vidGetInternalId(uint param_1);
     void voiceRemovePriority(int param_1);
     void voiceSetPriority(int param_1, byte param_2);
@@ -7721,11 +7759,11 @@ extern "C" {
     void ScanIDListReverse(ushort * param_1, int * param_2, byte param_3, int param_4);
     undefined4 sndPushGroup(int * param_1, short param_2, undefined4 param_3, int * param_4, int * param_5);
     undefined4 sndPopGroup(void);
-    uint seqPlaySong(short param_1, short param_2, int * param_3, uint * param_4, char param_5, undefined param_6);
-    void sndSeqPlayEx(short param_1, short param_2, int * param_3, uint * param_4, undefined param_5);
+    uint seqPlaySong(short param_1, short param_2, int * param_3, uint * param_4, char param_5, undefined1 param_6);
+    void sndSeqPlayEx(short param_1, short param_2, int * param_3, uint * param_4, undefined1 param_5);
     undefined4 salInitDspCtrl(byte param_1, byte param_2, int param_3);
     void salInitHRTFBuffer(void);
-    void salActivateStudio(uint param_1, undefined param_2, undefined4 param_3);
+    void salActivateStudio(uint param_1, undefined1 param_2, undefined4 param_3);
     void salDeactivateStudio(uint param_1);
     undefined4 salCheckVolErrorAndResetDelta(undefined2 * param_1, undefined2 * param_2, short * param_3, short param_4, int param_5, ushort param_6);
     void HandleDepopVoice(int param_1, int * param_2);
@@ -7750,7 +7788,7 @@ extern "C" {
     void StartContinousEmitters(void);
     void s3dHandle(void);
     void s3dInit(uint param_1);
-    int sndInit(byte param_1, undefined param_2, undefined param_3, byte param_4, uint param_5, int param_6);
+    int sndInit(byte param_1, undefined1 param_2, undefined1 param_3, byte param_4, uint param_5, int param_6);
     void salApplyMatrix(float * param_1, float * param_2, float * param_3);
     void salNormalizeVector(float * param_1);
     void inpSetGlobalMIDIDirtyFlag(uint param_1, uint param_2, uint param_3);
@@ -7763,8 +7801,8 @@ extern "C" {
     void inpResetChannelDefaults(uint param_1, uint param_2);
     void inpAddCtrl(int param_1, uint param_2, undefined4 param_3, byte param_4, int param_5);
     void inpFXCopyCtrl(uint param_1, int param_2, int param_3);
-    void inpSetMidiLastNote(uint param_1, uint param_2, undefined param_3);
-    void inpGetMidiLastNote(uint param_1, uint param_2);
+    void inpSetMidiLastNote(uint param_1, uint param_2, undefined1 param_3);
+    undefined1 inpGetMidiLastNote(uint param_1, uint param_2);
     uint _GetInputValue(int param_1, byte * param_2, uint param_3, uint param_4);
     void inpInit(int param_1);
     uint inpTranslateExCtrl(uint param_1);
@@ -7786,18 +7824,18 @@ extern "C" {
     uint sndConvert2Ms(uint param_1);
     void snd_handle_irq(void);
     undefined4 hwInit(undefined4 * param_1, byte param_2, byte param_3, uint param_4);
-    void hwSetTimeOffset(undefined param_1);
-    void WPADGetDpdSensitivity(void);
+    void hwSetTimeOffset(undefined1 param_1);
+    undefined1 WPADGetDpdSensitivity(void);
     bool hwIsActive(int param_1);
     void hwSetPriority(int param_1, undefined4 param_2);
     void hwInitSamplePlayback(int param_1, undefined2 param_2, undefined4 * param_3, int param_4, undefined4 param_5, undefined4 param_6, int param_7, char param_8);
     void hwBreak(int param_1);
     void hwSetADSR(int param_1, uint * param_2, byte param_3);
     void hwSetVirtualSampleLoopBuffer(int param_1, undefined4 param_2, undefined4 param_3);
-    void hwGetVirtualSampleState(int param_1);
-    void hwGetVirtualSampleState(int param_1);
+    undefined1 hwGetVirtualSampleState(int param_1);
+    undefined1 hwGetVirtualSampleState(int param_1);
     undefined2 hwGetSampleID(int param_1);
-    void hwSetStreamLoopPS(int param_1, undefined param_2);
+    void hwSetStreamLoopPS(int param_1, undefined1 param_2);
     void hwStart(int param_1, byte param_2);
     void hwKeyOff(int param_1);
     void hwSetPitch(int param_1, ushort param_2);
@@ -7815,7 +7853,7 @@ extern "C" {
     void hwTransAddr(void);
     void hwFrq2Pitch(undefined4 param_1);
     void hwInitSampleMem(undefined4 param_1, int param_2);
-    void hwSaveSample(int * param_1, void * * param_2);
+    void hwSaveSample(int * param_1, int * param_2);
     void hwRemoveSample(int param_1, undefined4 param_2);
     void hwSyncSampleMem(void);
     void empty_function(void);
@@ -7852,12 +7890,12 @@ extern "C" {
     undefined4 g_something_with_sound8_wrapper(int param_1);
     undefined4 ReverbHICreate(double param_1, double param_2, double param_3, double param_4, double param_5, double param_6, void * param_7);
     undefined4 ReverbHIModify(double param_1, double param_2, double param_3, double param_4, double param_5, double param_6, void * param_7);
-    void DoCrossTalk(undefined8 param_1, undefined8 param_2, uint * param_3, uint * param_4);
+    void DoCrossTalk(double param_1, double param_2, uint * param_3, uint * param_4);
     void HandleReverb(uint * param_1, int param_2, int param_3);
     void ReverbHICallback(uint * param_1, uint * param_2, uint * param_3, int param_4);
     void ReverbHIFree(int param_1);
-    void do_src1(int * * param_1);
-    void do_src2(int * * param_1);
+    void do_src1(undefined4 * param_1);
+    void do_src2(undefined4 * param_1);
     undefined4 sndAuxCallbackUpdateSettingsChorus(int param_1);
     undefined4 sndAuxCallbackPrepareChorus(int * param_1);
     undefined4 sndAuxCallbackShutdownChorus(void);
@@ -7923,7 +7961,7 @@ extern "C" {
     void mtxa_from_rotate_y(short angle);
     void mtxa_from_rotate_z(short angle);
     void mtxa_from_mtxb_translate(struct Vec * vec);
-    double mtxa_from_mtxb_translate_xyz(undefined8 param_1, undefined8 param_2, undefined8 param_3);
+    double mtxa_from_mtxb_translate_xyz(double param_1, double param_2, double param_3);
     void mtxa_normalize_basis(void);
     undefined8 mtxa_push(void);
     void mtxa_pop(void);
@@ -7966,7 +8004,7 @@ extern "C" {
     void mtxa_rotate_z_sin_cos(float sin_z_angle, float cos_z_angle);
     void mtxa_from_quat(struct Quat * quat);
     void quat_mult(struct Quat * dest, struct Quat * quat1, struct Quat * quat2);
-    undefined8 g_math_smth1(int param_1);
+    undefined8 g_math_smth1(float * param_1);
     void g_math_unk6(float * param_1);
     void g_math_unk7(double param_1, struct Quat * param_2, float * param_3, float * param_4);
     void g_math_unk8(double param_1, struct Quat * param_2, float * param_3, float * param_4);
@@ -8011,7 +8049,7 @@ extern "C" {
     void g_init_gx(BOOL32 make_second_fifo, u32 fifo_size, int g_something_with_alpha);
     void g_init_locked_cache_mtx_stack(int matrix_stack, int param_2);
     void * allocate_mem_from_arena(int size);
-    void g_set_some_func_ptrs2(DVDFileInfo * (** param_1)(void));
+    void g_set_some_func_ptrs2(undefined4 * param_1);
     void g_set_some_dvd_func_ptrs(void);
     void * (* set_alloc_from_heap_func_ptr(void * (* new_func)(u32)))(u32);
     void (* set_free_to_heap_func_ptr(void (* new_func)(void *)))(void *);
@@ -8057,7 +8095,7 @@ extern "C" {
     undefined8 g_some_GmaSomeStruct_func5(struct GmaShape * gma_struct);
     void g_some_GmaSomeStruct_func4(struct GmaShape * param_1);
     void g_free_some_memory(void);
-    Mtx * draw_poly(int param_1, Mtx * * param_2);
+    Mtx * draw_poly(int param_1, undefined4 * param_2);
     uint pointer_range_advance(byte * g_frame_pointer, int * toset);
     void g_avdisp_draw_model_now1(struct GmaModel * model);
     void g_avdisp_draw_model_now2(struct GmaModel * model);
@@ -8074,7 +8112,7 @@ extern "C" {
     void g_maybe_something_with_normals(int param_1);
     void g_init_gma(struct GmaBuffer * gma_buffer, struct Gma * gma_header, struct TplBuffer * tpl);
     int g_init_gma_model_materials(struct GmaModel * model, struct TplBuffer * tpl, struct GXTexObj * texobj_array);
-    void g_memcpy_using_locked_cache(void * dest, void * curr_src_1_1_1_1_1_1_1_1_1_1_1, size_t count);
+    void g_memcpy_using_locked_cache(void * dest, void * curr_src_1_1_1_1_1_1_1_1_1_1_1_1_1, size_t count);
     void g_something_with_locked_cache_2(void * param_1, uint param_2, uint param_3);
     void memcpy2(void * dest, void * src, size_t count);
     int * __va_arg(char * param_1, int param_2);
@@ -8168,9 +8206,9 @@ extern "C" {
     void __unregister_fragment(int param_1);
     undefined4 __register_fragment(undefined4 param_1, undefined4 param_2);
     void free(int * * __ptr);
-    void deallocate_from_fixed_pools(int * * param_1, int * * param_2, uint param_3);
+    void deallocate_from_fixed_pools(undefined4 * param_1, int * param_2, uint param_3);
     uint * soft_allocate_from_var_pools(int * param_1, int param_2, uint * param_3);
-    void SubBlock_merge_next(uint * param_1, uint * * param_2);
+    void SubBlock_merge_next(uint * param_1, uint * param_2);
     void Block_link(int param_1, uint * param_2);
     undefined4 __flush_all(void);
     void __close_all(void);
@@ -8179,8 +8217,8 @@ extern "C" {
     void __num2dec_internal(double param_1, char * param_2);
     uint __equals_dec(int param_1, int param_2);
     void __two_exp(undefined4 * param_1, ushort param_2);
-    void __timesdec(undefined * param_1, int param_2, int param_3);
-    void __ull2dec(undefined * param_1, undefined4 param_2, uint param_3, uint param_4);
+    void __timesdec(undefined1 * param_1, int param_2, int param_3);
+    void __ull2dec(undefined1 * param_1, undefined4 param_2, int param_3, int param_4);
     int __count_trailing_zerol(uint param_1);
     int __flush_buffer(undefined4 * param_1, undefined4 * param_2);
     void __prep_buffer(int param_1);
@@ -8214,13 +8252,13 @@ extern "C" {
     byte * float2str(double param_1, int param_2, int param_3);
     void round_decimal(int param_1, int param_2);
     char * double2hex(double param_1, int param_2, int param_3);
-    char * longlong2str(uint param_1, uint param_2, int param_3, char * param_4);
+    char * longlong2str(uint param_1, int param_2, int param_3, char * param_4);
     char * long2str(uint param_1, int param_2, char * param_3);
     char * parse_format(int param_1, char * param_2, uint * param_3);
     void qsort(void * __base, size_t __nmemb, size_t __size, __compar_fn_t __compar);
     void srand(u32 seed);
     int rand(void);
-    byte * __StringRead(byte * * param_1, byte * param_2, int param_3);
+    uint __StringRead(int * param_1, uint param_2, int param_3);
     char * strstr(char * __haystack, char * __needle);
     char * strchr(char * __s, int __c);
     int strncmp(char * __s1, char * __s2, size_t __n);
@@ -8261,7 +8299,7 @@ extern "C" {
     float cosf(float __x);
     void TRKNubMainLoop(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8);
     void TRKDestructEvent(int param_1);
-    void TRKConstructEvent(undefined * param_1, undefined param_2);
+    void TRKConstructEvent(undefined1 * param_1, undefined1 param_2);
     undefined4 TRKPostEvent(int param_1);
     undefined4 TRKGetNextEvent(int param_1);
     undefined4 TRKInitializeEventQueue(void);
@@ -8269,19 +8307,19 @@ extern "C" {
     undefined4 TRKTerminateNub(void);
     int TRKInitializeNub(void);
     void TRKMessageSend(int param_1);
-    void TRKReadBuffer_ui32(int param_1, undefined * param_2, int param_3);
+    void TRKReadBuffer_ui32(int param_1, undefined1 * param_2, int param_3);
     void TRKReadBuffer_ui8(int param_1, int param_2, int param_3);
-    int TRKReadBuffer1_ui64(int param_1, undefined * param_2);
-    int TRKReadBuffer1_ui32(int param_1, undefined * param_2);
-    int TRKReadBuffer1_ui16(int param_1, undefined * param_2);
+    int TRKReadBuffer1_ui64(int param_1, undefined1 * param_2);
+    int TRKReadBuffer1_ui32(int param_1, undefined1 * param_2);
+    int TRKReadBuffer1_ui16(int param_1, undefined1 * param_2);
     undefined4 TRKReadBuffer1_ui8(int param_1, int param_2);
     void TRKAppendBuffer_ui32(int param_1, undefined4 * param_2, int param_3);
-    int TRKAppendBuffer_ui8(int param_1, undefined * param_2, int param_3);
+    int TRKAppendBuffer_ui8(int param_1, undefined1 * param_2, int param_3);
     void TRKAppendBuffer1_ui64(int param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4);
     void TRKAppendBuffer1_ui32(int param_1, undefined4 param_2);
     void TRKAppendBuffer1_ui16(int param_1, undefined2 param_2);
     undefined4 TRKReadBuffer(int param_1, int param_2, uint param_3);
-    undefined4 TRKAppendBuffer(int param_1, undefined * param_2, uint param_3);
+    undefined4 TRKAppendBuffer(int param_1, undefined1 * param_2, uint param_3);
     undefined4 TRKSetBufferPosition(int param_1, uint param_2);
     void TRKResetBuffer(int param_1, char param_2);
     void TRKReleaseBuffer(int param_1);
@@ -8313,11 +8351,11 @@ extern "C" {
     int TRKDoDisconnect(int param_1);
     void TRKDoConnect(int param_1);
     void TRKDoUnsupported(int param_1);
-    void TRKStandardACK(int param_1, undefined param_2, undefined param_3);
+    void TRKStandardACK(int param_1, undefined1 param_2, undefined1 param_3);
     void SetTRKConnected(undefined4 param_1);
-    int HandlePositionFileSupportRequest(undefined4 param_1, undefined4 * param_2, undefined param_3, undefined * param_4);
-    int HandleCloseFileSupportRequest(undefined4 param_1, undefined * param_2);
-    int HandleOpenFileSupportRequest(char * param_1, undefined param_2, undefined4 * param_3, undefined * param_4);
+    int HandlePositionFileSupportRequest(undefined4 param_1, undefined4 * param_2, undefined1 param_3, undefined1 * param_4);
+    int HandleCloseFileSupportRequest(undefined4 param_1, undefined1 * param_2);
+    int HandleOpenFileSupportRequest(char * param_1, undefined1 param_2, undefined4 * param_3, undefined1 * param_4);
     int TRKRequestSend(int param_1, int * param_2, uint param_3, int param_4, int param_5);
     int TRKSuppAccessFile(int param_1, int param_2, uint * param_3, char * param_4, int param_5, int param_6);
     undefined4 return_0(void);
@@ -8340,9 +8378,9 @@ extern "C" {
     void TRKTargetAddExceptionInfo(int param_1);
     void TRKTargetAddStopInfo(int param_1);
     int TRKTargetInterrupt(byte * param_1);
-    undefined4 TRKTargetCPUType(undefined * param_1);
-    undefined4 TRKTargetSupportMask(undefined * param_1);
-    undefined4 TRKTargetVersions(undefined * param_1);
+    undefined4 TRKTargetCPUType(undefined1 * param_1);
+    undefined4 TRKTargetSupportMask(undefined1 * param_1);
+    undefined4 TRKTargetVersions(undefined1 * param_1);
     int TRKTargetAccessExtended2(uint param_1, uint param_2, int param_3, int * param_4, int param_5);
     uint TRKTargetAccessExtended1(uint param_1, uint param_2, int param_3, int * param_4, int param_5);
     int TRKTargetAccessFP(uint param_1, uint param_2, int param_3, int * param_4, int param_5);
@@ -8366,15 +8404,15 @@ extern "C" {
     void TRK_board_display(char * param_1);
     void UnreserveEXI2Port(void);
     void UnreserveEXI2Port(void);
-    int TRKReadUARTPoll(undefined * param_1);
-    undefined4 WriteUART1(undefined param_1);
+    int TRKReadUARTPoll(undefined1 * param_1);
+    undefined4 WriteUART1(undefined1 param_1);
     int WriteUARTFlush(void);
     void UnreserveEXI2Port(void);
     undefined4 TRKInitializeIntDrivenUART(void);
     void InitMetroTRKCommTable(int param_1);
     void TRKEXICallBack(undefined4 param_1, undefined4 * param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8);
     undefined4 TRKTargetContinue(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8);
-    void SetUseSerialIO(undefined param_1);
+    void SetUseSerialIO(undefined1 param_1);
     undefined4 __position_file(void);
     undefined4 __close_file(void);
     undefined4 __write_file(undefined4 param_1, undefined4 param_2, undefined4 * param_3);
@@ -8454,7 +8492,7 @@ extern "C" {
     void g_smth_with_bg_color_drawing(struct GXColor param_1);
     void g_draw_func_init(void);
     void g_something_with_view_stage(void);
-    void g_some_draw_func(void);
+    void fade_color_base_default(void);
     void take_pausemenu_screenshot(void * out_image_buffer, undefined4 src_left_px, undefined4 src_top_px, short width_px, short height_px, GXTexFmt  fmt);
     void init_pausemenu_screenshot_texobj(struct GXTexObj * param_1);
     void g_draw_pausemenu_screenshot(struct GXTexObj * tex);
@@ -8511,7 +8549,7 @@ extern "C" {
     void init_cameras(void);
     void event_camera_init(void);
     void event_camera_tick(void);
-    void g_some_camera_parent_func(undefined param_1, undefined param_2, undefined param_3, undefined param_4, undefined param_5, undefined param_6, undefined param_7, undefined param_8, undefined4 param_9, undefined4 param_10, undefined4 param_11, undefined8 param_12, undefined8 param_13, undefined8 param_14, undefined8 param_15, undefined4 param_16, undefined4 param_17);
+    void g_some_camera_parent_func(void);
     void event_camera_dest(void);
     void enable_camera(int camera_idx);
     void disable_all_cameras(void);
@@ -8691,7 +8729,7 @@ extern "C" {
     void event_sound_dest(void);
     double g_smth_called_by_event_tick_sound_1(char param_1, short param_2);
     void g_smth_called_by_event_tick_sound_2(void);
-    void g_set_smth_with_sound(undefined param_1);
+    void g_set_smth_with_sound(undefined1 param_1);
     void g_smth_calls_sndFXStartParaInfo(struct GSoundCue * cue);
     int g_something_with_volume(uint * param_1, int param_2, int param_3);
     undefined4 g_something_calls_sndFXKeyOff(uint param_1, int param_2, int param_3);
@@ -8749,8 +8787,8 @@ extern "C" {
     void g_something_with_sound6(void);
     void g_something_with_sound11(void);
     void empty_function(void);
-    uint g_something_with_sound4(undefined * param_1, undefined4 param_2, undefined param_3, undefined param_4, undefined param_5, undefined param_6);
-    int g_smgr_allocate_stereo(undefined4 param_1, undefined4 param_2, undefined param_3, undefined param_4, char * param_5, char * param_6, char param_7);
+    uint g_something_with_sound4(undefined1 * param_1, undefined4 param_2, undefined1 param_3, undefined1 param_4, undefined1 param_5, undefined1 param_6);
+    int g_smgr_allocate_stereo(undefined4 param_1, undefined4 param_2, undefined1 param_3, undefined1 param_4, char * param_5, char * param_6, char param_7);
     void g_some_dvd_read_async_sound_callback(s32 result, struct DVDFileInfo * file_info);
     void event_adx_init(undefined8 param_1, undefined8 param_2, undefined8 param_3, undefined8 param_4, undefined8 param_5, undefined8 param_6, undefined8 param_7, undefined8 param_8, undefined4 param_9, undefined4 param_10, undefined4 param_11, undefined4 param_12, undefined4 param_13, undefined4 param_14, undefined4 param_15, undefined4 param_16);
     void event_adx_tick(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8);
@@ -8818,12 +8856,12 @@ extern "C" {
     void ball_physics_g_something_w_postgoal_blast_up2(struct Ball * ball);
     void g_move_and_collide(struct Ball * ball, struct PhysicsBall * physicsBall);
     void g_apply_ball_velocity(struct Ball * ball);
-    void collide_with_stage(struct Ball * ball, struct PhysicsBall * physicsball);
+    void handle_ball_stage_coli(struct Ball * ball, struct PhysicsBall * physicsball);
     void position_ball(struct Ball * ball, struct PhysicsBall * phys_ball);
     void set_ball_properties(struct Ball * ball, int constants_idx);
     void ball_collision_stars(struct Ball * ball);
     void init_physicsball_from_ball(struct Ball * ball, struct PhysicsBall * physicsball);
-    void g_copy_physicsball_to_ball(struct Ball * ball, struct PhysicsBall * physicsball);
+    void apply_physicsball_to_ball(struct Ball * ball, struct PhysicsBall * physicsball);
     void g_ball_ape_rotation(struct Ball * ball);
     void spawn_postgoal_ball_sparkle(void);
     void g_some_ballfunc(struct Ball * param_1);
@@ -8832,19 +8870,19 @@ extern "C" {
     void set_visual_scale(struct Ball * ball);
     void g_draw_ball_and_ape(void);
     void g_something_with_view_stage_and_ball(void);
-    undefined4 * g_some_ball_stage_coli_func(struct PhysicsBall * physicsball, struct StagedefFileHeader * stagedef);
-    undefined4 meshcoli_grid_lookup(float x, float z, struct StagedefColiHeader * coli_header);
-    void stcoli_sub03(struct PhysicsBall * physicsball, struct StagedefColiTri * tri);
-    void stcoli_sub04(struct PhysicsBall * physball, struct StagedefColiTri * tri);
-    void stcoli_sub05(struct PhysicsBall * param_1, struct Vec * param_2, struct Vec * param_3, float * param_4);
-    void stcoli_sub06(struct PhysicsBall * physball, struct StagedefColiTri * tri);
-    undefined8 stcoli_sub07(struct PhysicsBall * param_1, float * param_2, float * param_3);
+    void collide_ball_with_stage(struct PhysicsBall * physicsball, struct StagedefFileHeader * stagedef);
+    short * tri_coli_grid_lookup(float x, float z, struct StagedefColiHeader * coli_header);
+    void collide_ball_with_tri_face(struct PhysicsBall * physicsball, struct StagedefColiTri * tri);
+    void collide_ball_with_tri_edges(struct PhysicsBall * physball, struct StagedefColiTri * tri);
+    void collide_ball_with_tri_edge(struct PhysicsBall * param_1, struct Vec * param_2, struct Vec * param_3, float * param_4);
+    void collide_ball_with_tri_vertices(struct PhysicsBall * physball, struct StagedefColiTri * tri);
+    undefined8 collide_ball_with_tri_vertex(struct PhysicsBall * param_1, float * param_2, float * param_3);
     void g_some_jamabar_coli_func(struct PhysicsBall * physicsball, float * param_2);
-    void g_cylinder_coli_something(struct PhysicsBall * physball, struct StagedefColiCylinder * cylinder);
+    void collide_ball_with_cylinder(struct PhysicsBall * physball, struct StagedefColiCylinder * cylinder);
     void stcoli_sub10(struct PhysicsBall * param_1, struct Vec * param_2);
-    void g_sphere_coli_something(struct PhysicsBall * param_1, struct StagedefColiSphere * param_2);
-    void g_cone_coli_something(struct PhysicsBall * param_1, struct StagedefColiCone * param_2);
-    void g_something_with_physicsball_restitution(struct PhysicsBall * physicsball, struct Vec * param_2);
+    void collide_ball_with_sphere(struct PhysicsBall * param_1, struct StagedefColiSphere * param_2);
+    void collide_ball_with_cone(struct PhysicsBall * param_1, struct StagedefColiCone * param_2);
+    void collide_ball_with_plane(struct PhysicsBall * physicsball, struct ColiPlane * plane);
     BOOL32 line_intersects_rect(struct Vec * lineStart, struct Vec * lineEnd, struct Rect * rect);
     void stobj_jamabar_child_coli(struct PhysicsBall * physicsball, struct Stobj * stobj);
     void raycast_stage_down(struct Vec * origin, struct RaycastHit * out_hit, struct Vec * out_vel_at_point);
@@ -8852,9 +8890,9 @@ extern "C" {
     BOOL32 raycast_cone(struct Vec * line_origin, undefined4 line_dir, struct StagedefColiCone * cone, struct Vec * out_hit_pos, struct Vec * out_hit_normal);
     BOOL32 raycast_sphere(struct Vec * line_origin, struct Vec * line_dir, struct StagedefColiSphere * sphere, struct Vec * out_hit_pos, struct Vec * out_hit_normal);
     BOOL32 raycast_cylinder(undefined4 line_origin, undefined4 line_dir, struct StagedefColiCylinder * cylinder, undefined4 out_hit_pos, undefined4 out_hit_normal);
-    uint g_goal_coli_something(struct PhysicsBall * param_1, struct StagedefGoal * param_2);
-    void stcoli_sub22(struct PhysicsBall * param_1, struct Vec * param_2);
-    void stcoli_sub24(struct PhysicsBall * param_1, struct Vec * param_2);
+    uint collide_ball_with_goal(struct PhysicsBall * physicsball, struct StagedefGoal * goal_def);
+    void g_goal_coli_func1(struct PhysicsBall * param_1, struct Vec * param_2);
+    void g_goal_coli_func2(struct PhysicsBall * param_1, struct Vec * param_2);
     void stcoli_sub25(struct PhysicsBall * param_1, int param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8);
     void g_draw_stage_collision(void);
     void stcoli_sub27(int param_1);
@@ -8862,9 +8900,9 @@ extern "C" {
     void stcoli_sub29(float * param_1, float * param_2, float * param_3, float * param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8);
     void tf_physicsball_by_mtxa(struct PhysicsBall * physicsball1, struct PhysicsBall * physicsball2);
     void inv_tf_physicsball_by_mtxa(struct PhysicsBall * src_physicsball, struct PhysicsBall * dest_physicsball);
-    void tf_physball_to_itemgroup_space(struct PhysicsBall * physicsball, int itemgroup_idx);
-    uint g_something_w_ig_and_coli_headers(struct Itemgroup * ig_list, struct StagedefColiHeader * coli_header_list, undefined4 param_3, struct Vec * physicsball_x);
-    undefined4 g_something_w_ig_and_coli_headers_2(struct Itemgroup * ig_list, struct StagedefColiHeader * coli_header_list, struct Vec * physicsball_pos);
+    void tf_physball_to_itemgroup_space(struct PhysicsBall * physicsball, int dest_ig_idx);
+    uint g_is_ball_in_ig_coli_range(struct Itemgroup * ig_list, struct StagedefColiHeader * coli_header_list, undefined4 param_3, struct Vec * physicsball_x);
+    BOOL32 g_ball_ig_bound_sphere_overlap(struct Itemgroup * ig_anim, struct StagedefColiHeader * ig_def, struct Vec * physicsball_pos);
     void event_world_init(void);
     void event_world_tick(void);
     void event_world_dest(void);
@@ -8872,7 +8910,7 @@ extern "C" {
     void event_stage_init(void);
     void event_stage_tick(void);
     void event_stage_dest(void);
-    double g_advance_itemgroup_anim_frame(struct Itemgroup * itemgroup, struct StagedefColiHeader * colis_header);
+    float advance_itemgroup_anim(struct Itemgroup * itemgroup, struct StagedefColiHeader * colis_header);
     void g_advance_stage_animation(void);
     void g_transform_some_itemgroup_vec(void);
     GmaModel * get_GmaBuffer_entry(struct GmaBuffer * buffer, char * name);
@@ -8891,6 +8929,7 @@ extern "C" {
     void g_smth_with_stage_anim_groups(int anim_group_id, uint param_2);
     BOOL32 g_smth_with_buttons(int anim_group_id, uint param_2);
     void g_init_smth_with_seesaws(void);
+    void collide_ball_with_seesaws(undefined2 param_1, undefined2 g_ball_idx, struct PhysicsBall * param_3);
     undefined4 get_seesaw_replay_state_size(struct SeesawInfo * seesaw_info);
     void g_smth_with_stage_fog(double param_1);
     bool is_stage_id_not_for_party_game(int stage_id);
@@ -8953,6 +8992,7 @@ extern "C" {
     void empty_function(void);
     void g_something_with_score(void);
     void g_advance_replay2(double replay_frames_remaining, float * param_2);
+    short g_get_replay_time(void);
     uint rle_encode(void * input, void * output, uint inputSize);
     uint get_compressed_replay_size(void);
     uint compress_replay(void * outCompressedReplay);
@@ -9191,6 +9231,7 @@ extern "C" {
     void bg_wat2_item_coin_coli(void);
     void empty_function(void);
     void empty_function(void);
+    void wat2_draw_caustics(void * some_pointer);
     void bg_pil2_init(void);
     void bg_pil2_tick(void);
     void bg_pil2_dest(void);
@@ -9326,7 +9367,7 @@ extern "C" {
     void item_coin_dest(void);
     void item_coin_replay_init(struct Item * item);
     void item_debug_coin(struct Item * item);
-    GmaModel * g_something_with_coins(int * * param_1);
+    GmaModel * g_something_with_coins(undefined4 * param_1);
     void event_stobj_collision_init(void);
     void event_stobj_collision_tick(void);
     void event_stobj_collision_dest(void);
@@ -9545,7 +9586,7 @@ extern "C" {
     void sprite_save_tick(u8 * status, struct Sprite * sprite);
     void sprite_save_disp(struct Sprite * sprite);
     void sprite_monkey_counter_icon_disp(struct Sprite * sprite);
-    undefined4 g_smth_with_get_active_monkey_icon(undefined4 param_1, int param_2, int param_3);
+    undefined4 g_smth_with_get_active_monkey_icon(int param_1, int param_2, int param_3);
     void create_how_to_sprite(void);
     void sprite_how_to_tick(u8 * status, struct Sprite * sprite);
     void g_how_to_sprite_draw_controller_tooltips(int param_1, int param_2, struct SpriteDrawRequest * param_3);
@@ -9621,7 +9662,7 @@ extern "C" {
     int g_get_debug_level_select_loading_left_asterisks(void);
     undefined4 g_swapDiscQueueGroup(undefined4 newValue);
     void g_fill_some_memory_with_0x0_and_0xff(void * ptr);
-    void g_some_shadow_draw_func(void * pointer);
+    void g_some_shadow_draw_func(struct ShadowReceive * shadow_receive);
     undefined4 g_check_some_condition(ushort param_1);
     void debug_draw_shadow_textures(void);
     void md_mini_func(void);
@@ -9646,16 +9687,16 @@ extern "C" {
     void event_rend_efc_dest(void);
     void g_something_with_rend_efc(uint param_1);
     void g_init_rendefc_for_stage(void);
-    void g_smth_with_loading_reflective_stgobjs(undefined * param_1);
+    void g_smth_with_loading_reflective_stgobjs(undefined1 * param_1);
     void g_smth_calling_reflective_obj_draw_hdlr(int g_some_flag, int * param_2);
     void g_reflective_object_draw_handler(int g_some_flag, int * g_some_ptr);
     void g_reflective_object_draw_handler_2(undefined4 param_1, int param_2);
-    void g_some_rendefc_func_1(undefined * param_1);
-    void g_smth_with_pil2_ref(undefined * param_1);
+    void g_some_rendefc_func_1(undefined1 * param_1);
+    void g_smth_with_pil2_ref(undefined1 * param_1);
     void g_something_with_stage_heap_and_target_theme(int param_1);
     void g_some_rendefc_func_2(int param_1, int param_2);
     void g_smth_with_reflective_models(undefined4 param_1, int param_2);
-    void g_smth_with_wormhole_surfaces(undefined * param_1);
+    void g_smth_with_wormhole_surfaces(undefined1 * param_1);
     void fog_main(void);
     void g_set_something3(char param_1);
     void smd_mini_commend_init(void);
@@ -9697,18 +9738,18 @@ extern "C" {
     void g_something_with_card6(undefined8 param_1, undefined8 param_2, undefined8 param_3, undefined8 param_4, undefined8 param_5, undefined8 param_6, undefined8 param_7, undefined8 param_8);
     byte g_check_some_memcard_field(void);
     undefined4 g_get_result_code(void);
-    void g_get_some_memcard_var(void);
+    undefined1 g_get_some_memcard_var(void);
     void g_sprintf_memcard_error(int param_1, char * param_2);
-    void g_get_last_used_memcard_slot(void);
+    undefined1 g_get_last_used_memcard_slot(void);
     void g_save_game_data(void);
     void g_some_loading_function(void);
     void smd_game_over_save_child(void);
     void g_something_with_card2(int card_chan, int param_2);
-    void * g_some_replay_func(void * * param_1, uint * param_2);
+    void * g_some_replay_func(undefined4 * param_1, uint * param_2);
     undefined4 g_some_replay_func2(byte * param_1);
     char * g_some_replay_func3(byte * param_1, char * param_2);
     uint g_something_with_fonts(void);
-    void g_some_printf_function_6(undefined8 param_1, undefined8 param_2, undefined8 param_3, undefined8 param_4, undefined8 param_5, undefined8 param_6, undefined8 param_7, undefined8 param_8, int param_9, int param_10, int param_11, char * param_12, undefined4 param_13, undefined4 param_14, undefined4 param_15, undefined4 param_16);
+    void g_some_printf_function_6(undefined8 param_1, undefined8 param_2, undefined8 param_3, undefined8 param_4, undefined8 param_5, undefined8 param_6, undefined8 param_7, undefined8 param_8, undefined4 param_9, undefined4 param_10, undefined4 param_11, char * param_12, undefined4 param_13, undefined4 param_14, undefined4 param_15, undefined4 param_16);
     void smd_mini_ranking_init(void);
     void smd_mini_ranking_tick(void);
     void g_load_preview_texture(struct SpriteTex * sprite_tex, char * file_path, undefined4 param_3, u16 width, u16 height, GXTexFmt  format);
@@ -9760,14 +9801,14 @@ extern "C" {
     void avdisp_draw_model_culled_sort_always(struct GmaModel * gma_model);
     void g_some_ord_node_func1(int param_1);
     void g_some_ord_node_func2(int param_1);
-    void g_some_draw_func3(double param_1);
+    void avdisp_set_scale_factor(float scale);
     void call_g_avdisp_set_ambient(double param_1, double param_2, double param_3);
     void avdisp_set_alpha(float param_1);
-    void g_some_cleanup_func(undefined param_1, undefined param_2, undefined param_3);
+    void g_some_cleanup_func(undefined1 param_1, undefined1 param_2, undefined1 param_3);
     undefined4 g_something_with_texture_scroll_2(int param_1);
-    void g_stores_doubles(double param_1, double param_2, double param_3, double param_4);
+    void set_post_mult_color(double param_1, double param_2, double param_3, double param_4);
     void g_stores_doubles2(double param_1, double param_2, double param_3, double param_4);
-    void avdisp_set_fog_params(double param_1, double param_2, undefined param_3);
+    void avdisp_set_fog_params(double param_1, double param_2, undefined1 param_3);
     void avdisp_set_fog_color(u8 r, u8 g, u8 b);
     void g_yet_another_unk_draw_func(undefined4 param_1);
     void g_avdisp_reset_alpha_and_bound_sphere_scale(void);
@@ -9796,7 +9837,7 @@ extern "C" {
     uint g_table_index(struct SKLRoot * param1, char * str);
     void load_ape_body(int ape_index, int game_index);
     void gan_setanim_estagebegin(struct Ape * ape, int chara_index, int scene_index);
-    void g_something_freeing_chara_heap_3(void * * param_1);
+    void g_something_freeing_chara_heap_3(int * param_1);
     void g_something_with_new_ape(struct Ape * ape, int chara_index, int scene_index);
     ulonglong event_ape_init(void);
     void event_ape_tick(void);
@@ -9907,7 +9948,7 @@ extern "C" {
     void empty_function(void);
     void compare_play_points_with_99999_after_exit_game(void);
     dword get_play_point_count(void);
-    void g_display_playpoint_or_gift_message(double g_x_pos, double g_y_pos, undefined param_3);
+    void g_display_playpoint_or_gift_message(double g_x_pos, double g_y_pos, undefined1 param_3);
     void g_playpoint_or_gift_msg_disp(undefined8 param_1_00, undefined8 param_2, undefined8 param_3, undefined8 param_4, undefined8 param_5, undefined8 param_6, undefined8 param_7, undefined8 param_8, int * param_9, undefined4 param_10, undefined4 param_11, undefined4 param_12, undefined4 param_13, undefined4 param_14, undefined4 param_15, undefined4 param_16);
     bool is_able_to_unlock_party_game(void);
     void unlock_party_game(int party_game);
@@ -9985,6 +10026,7 @@ extern "C" {
     void smd_game_scenscnplay_return(void);
     void smd_game_force_over_init(void);
     void smd_game_force_over_tick(void);
+    void g_maybe_some_goal_func(void);
     void g_preload_stage_or_results(void);
     void g_challenge_mode_start(struct Ball * ball);
     void challenge_mode_physics(struct Ball * ball);
@@ -10327,7 +10369,7 @@ extern "C" {
     void test_adx_draw_func(void);
     void test_newmotion_draw_func(void);
     void g_something_freeing_something_from_main_heap_2(void);
-    void gan_setanim_e5(struct ArcFileInfo * * param_1, char * param_2, void * * param_3);
+    void gan_setanim_e5(undefined4 * param_1, char * param_2, int * param_3);
     void gan_set_anim_e6(int param_1);
     void gan_setanim_e7(int param_1, undefined4 param_2, int param_3);
     void gan_setanim_e8(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, int param_5);
@@ -10370,8 +10412,8 @@ extern "C" {
     void boat_unlinked_func(void);
     void g_load_boat(void);
     void shooting_unlinked_func(void);
-    void g_read_something_for_shooting_from_dvd(char * param_1, struct ArcFileInfo * * param_2, int * param_3);
-    void g_read_something_for_shooting_2(struct SKLFile * * param_1, char * param_2, struct SKLRoot * * param_3);
+    void g_read_something_for_shooting_from_dvd(char * param_1, undefined4 * param_2, int * param_3);
+    void g_read_something_for_shooting_2(undefined4 * param_1, char * param_2, int * param_3);
     void mini_futsal_unlinked_func(void);
     void empty_function(void);
     void empty_function(void);
@@ -10399,7 +10441,7 @@ extern "C" {
     void empty_function(void);
     void empty_function(void);
     void empty_function(void);
-    void g_load_baseball(byte player_id, BallMode  param_2, undefined param_3, byte param_4, byte param_5, uint param_6, void * param_7, int param_8);
+    void g_load_baseball(byte player_id, BallMode  param_2, undefined1 param_3, byte param_4, byte param_5, uint param_6, void * param_7, int param_8);
     void empty_function(void);
     void empty_function(void);
     void empty_function(void);
