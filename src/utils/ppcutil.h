@@ -16,7 +16,11 @@
 
 #define PPC_INSTR_NOP() (0x60000000)
 
-// TODO: PPC_INSR_CMPWI
+#define PPC_INSTR_CMPWI(rA, imm) (0x2C000000u + ((u32) (rA) << 16) + (u16) (imm))
+
+#define PPC_INSTR_SUBI(dest_register, src_register, value) \
+    (0x38000000u + ((u32) (dest_register) << 21) + ((u32) (src_register) << 16) + (u16) (-(s16) (value)))
+
 
 #define PPC_R0 0
 #define PPC_R1 1
