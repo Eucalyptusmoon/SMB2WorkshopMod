@@ -2,6 +2,7 @@
 
 #include "internal/patch.h"
 #include "internal/tickable.h"
+#include "utils/ppcutil.h"
 
 namespace death_counter {
 
@@ -83,7 +84,7 @@ void init_main_game() {
 // menu, change the check for unlocked monkeys to be less than 4 to less than
 // 255, effectively never displaying the Gameplay Settings menu
 void init_sel_ngc() {
-    patch::write_word(reinterpret_cast<void*>(0x808ffb14), 0x2c0300ff);// cmpwi r3, 255
+    patch::write_word(reinterpret_cast<void*>(0x808ffb14), PPC_INSTR_CMPWI(PPC_R3, 255));
 }
 
 }// namespace death_counter

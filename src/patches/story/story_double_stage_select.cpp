@@ -3,6 +3,7 @@
 #include "internal/patch.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
+#include "utils/ppcutil.h"
 
 namespace story_double_stage_select {
 
@@ -105,7 +106,7 @@ void init_main_loop() {
     mkb::pausemenu_entry_counts[6] = 7;
     // Edits behaviors in the function which handles pausemenu selections
     patch::write_nop(reinterpret_cast<void*>(0x802745a4));
-    patch::write_word(reinterpret_cast<void*>(0x8027459c), 0x2c000004);// cmpwi r0, 4
+    patch::write_word(reinterpret_cast<void*>(0x8027459c), PPC_INSTR_CMPWI(PPC_R0, 4));
     // Hook into the function which checks input in the pausemenu for our recreated behaviors
     patch::hook_function(s_check_pause_menu_input_tramp, mkb::check_pause_menu_input, [](mkb::Sprite* pause_sprite) {
         s_check_pause_menu_input_tramp.dest(pause_sprite);

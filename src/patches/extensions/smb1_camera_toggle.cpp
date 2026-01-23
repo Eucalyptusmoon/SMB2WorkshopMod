@@ -97,56 +97,65 @@ void tick() {
     // Billiards
     if (mkb::pausemenu_type == mkb::PMT_CHALLENGE) {
         if ((mkb::g_some_status_bitflag_maybe_pause_related & 4) != 0) {
-            patch::write_word(reinterpret_cast<void*>(0x8032a914), 0x2c1b0009);
+            patch::write_word(reinterpret_cast<void*>(0x8032a914), PPC_INSTR_CMPWI(PPC_R27, 9));
         }
         else {
-            patch::write_word(reinterpret_cast<void*>(0x8032a914), 0x2c1b0001);
+            patch::write_word(reinterpret_cast<void*>(0x8032a914), PPC_INSTR_CMPWI(PPC_R27, 1));
         }
+
         if (mkb::g_current_pause_menu_entry_count == 5) {
             // Special handler for CM retry
-            patch::write_word(reinterpret_cast<void*>(0x8032a91c), 0x2c1c0003);
-            patch::write_word(reinterpret_cast<void*>(0x80273678), 0x2c000003);
+            patch::write_word(reinterpret_cast<void*>(0x8032a91c), PPC_INSTR_CMPWI(PPC_R28, 3));
+            patch::write_word(reinterpret_cast<void*>(0x80273678), PPC_INSTR_CMPWI(PPC_R0, 3));
         }
         else {
-            patch::write_word(reinterpret_cast<void*>(0x8032a91c), 0x2c1c0002);
-            patch::write_word(reinterpret_cast<void*>(0x80273678), 0x2c000002);
+            patch::write_word(reinterpret_cast<void*>(0x8032a91c), PPC_INSTR_CMPWI(PPC_R28, 2));
+            patch::write_word(reinterpret_cast<void*>(0x80273678), PPC_INSTR_CMPWI(PPC_R0, 2));
         }
-        patch::write_word(reinterpret_cast<void*>(0x80273664), 0x2c000001);
+
+        patch::write_word(reinterpret_cast<void*>(0x80273664), PPC_INSTR_CMPWI(PPC_R0, 1));
+
         mkb::strcpy(mkb::PAUSEMENU_ON_STRING, "  1");
         mkb::strcpy(mkb::PAUSEMENU_OFF_STRING, "2");
     }
+
     else if (mkb::pausemenu_type == mkb::PMT_STORY_PLAY) {
         if ((mkb::g_some_status_bitflag_maybe_pause_related & 4) != 0) {
-            patch::write_word(reinterpret_cast<void*>(0x8032a914), 0x2c1b000e);
+            patch::write_word(reinterpret_cast<void*>(0x8032a914), PPC_INSTR_CMPWI(PPC_R27, 14));
         }
         else {
-            patch::write_word(reinterpret_cast<void*>(0x8032a914), 0x2c1b0006);
+            patch::write_word(reinterpret_cast<void*>(0x8032a914), PPC_INSTR_CMPWI(PPC_R27, 6));
         }
-        patch::write_word(reinterpret_cast<void*>(0x8032a91c), 0x2c1c0003);
-        patch::write_word(reinterpret_cast<void*>(0x80273664), 0x2c000006);
-        patch::write_word(reinterpret_cast<void*>(0x80273678), 0x2c000003);
+
+        patch::write_word(reinterpret_cast<void*>(0x8032a91c), PPC_INSTR_CMPWI(PPC_R28, 3));
+        patch::write_word(reinterpret_cast<void*>(0x80273664), PPC_INSTR_CMPWI(PPC_R0, 6));
+        patch::write_word(reinterpret_cast<void*>(0x80273678), PPC_INSTR_CMPWI(PPC_R0, 3));
+
         mkb::strcpy(mkb::PAUSEMENU_ON_STRING, "  1");
         mkb::strcpy(mkb::PAUSEMENU_OFF_STRING, "2");
     }
+
     else if (mkb::pausemenu_type == mkb::PMT_PRACTICE) {
         if ((mkb::g_some_status_bitflag_maybe_pause_related & 4) != 0) {
-            patch::write_word(reinterpret_cast<void*>(0x8032a914), 0x2c1b000a);
+            patch::write_word(reinterpret_cast<void*>(0x8032a914), PPC_INSTR_CMPWI(PPC_R27, 10));
         }
         else {
-            patch::write_word(reinterpret_cast<void*>(0x8032a914), 0x2c1b0002);
+            patch::write_word(reinterpret_cast<void*>(0x8032a914), PPC_INSTR_CMPWI(PPC_R27, 2));
         }
-        patch::write_word(reinterpret_cast<void*>(0x8032a91c), 0x2c1c0003);
-        patch::write_word(reinterpret_cast<void*>(0x80273664), 0x2c000002);
-        patch::write_word(reinterpret_cast<void*>(0x80273678), 0x2c000003);
+
+        patch::write_word(reinterpret_cast<void*>(0x8032a91c), PPC_INSTR_CMPWI(PPC_R28, 3));
+        patch::write_word(reinterpret_cast<void*>(0x80273664), PPC_INSTR_CMPWI(PPC_R0, 2));
+        patch::write_word(reinterpret_cast<void*>(0x80273678), PPC_INSTR_CMPWI(PPC_R0, 3));
+
         mkb::strcpy(mkb::PAUSEMENU_ON_STRING, "  1");
         mkb::strcpy(mkb::PAUSEMENU_OFF_STRING, "2");
     }
     else {
-        // Original instructions (Billiards)
-        patch::write_word(reinterpret_cast<void*>(0x8032a914), 0x2c1b0004);
-        patch::write_word(reinterpret_cast<void*>(0x8032a91c), 0x2c1c0001);
-        patch::write_word(reinterpret_cast<void*>(0x80273664), 0x2c000004);
-        patch::write_word(reinterpret_cast<void*>(0x80273678), 0x2c000001);
+        patch::write_word(reinterpret_cast<void*>(0x8032a914), PPC_INSTR_CMPWI(PPC_R27, 4));
+        patch::write_word(reinterpret_cast<void*>(0x8032a91c), PPC_INSTR_CMPWI(PPC_R28, 1));
+        patch::write_word(reinterpret_cast<void*>(0x80273664), PPC_INSTR_CMPWI(PPC_R0, 4));
+        patch::write_word(reinterpret_cast<void*>(0x80273678), PPC_INSTR_CMPWI(PPC_R0, 1));
+
         mkb::strcpy(mkb::PAUSEMENU_ON_STRING, "ON");
         mkb::strcpy(mkb::PAUSEMENU_OFF_STRING, "OFF");
     }

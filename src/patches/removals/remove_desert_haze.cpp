@@ -2,6 +2,7 @@
 
 #include "internal/patch.h"
 #include "internal/tickable.h"
+#include "utils/ppcutil.h"
 
 namespace remove_desert_haze {
 
@@ -14,9 +15,8 @@ TICKABLE_DEFINITION((
 // proper fix soon. In a function that sets a parameter that enables heat
 // haze for the specific desert theme ID, the theme ID is compared to 0xffff
 // instead of 0x7.
-// 0x2c00ffff = cmpwi r0, 0xffff
 void init_main_loop() {
-    patch::write_word(reinterpret_cast<void*>(0x802e4ed8), 0x2c00ffff);
+    patch::write_word(reinterpret_cast<void*>(0x802e4ed8), PPC_INSTR_CMPWI(PPC_R0, -1));
 }
 
 }// namespace remove_desert_haze

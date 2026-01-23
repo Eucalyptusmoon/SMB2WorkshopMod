@@ -24,7 +24,7 @@ void init_main_loop() {
     // SMB1
     patch::write_nop(reinterpret_cast<void*>(0x802945d8));
     // Check for stage 0xffff instead of 190 for what stage's .gma/.tpl not to load
-    patch::write_word(reinterpret_cast<void*>(0x802c7350), 0x2c1fffff);
+    patch::write_word(reinterpret_cast<void*>(0x802c7350), PPC_INSTR_CMPWI(PPC_R31, -1));
     // Check for stage 0xffffffff when enabling a lighting hardcode instead of 200
     patch::write_word(reinterpret_cast<void*>(0x80455ff8), 0xffffffff);
     // In the function which handles Bonus Wave's collision, nop
@@ -38,26 +38,26 @@ void init_main_loop() {
     // Labyrinth camera removal
     // Always compare the stage ID to 0xFFFF when these camera functions check
     // if the current stage ID is 0x15a when determining specific constants.
-    // 0x2c00ffff = cmpwi r0. 0xFFFF
-    patch::write_word(reinterpret_cast<void*>(0x802858D4), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x802874BC), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x8028751C), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x802880EC), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x802881D4), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x802883B4), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x802886B8), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x8028BF44), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x8028C1CC), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x8028C650), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x8028CA84), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x80291338), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x80291420), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x80291664), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x80291904), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x80291930), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x80291960), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x8029198C), 0x2c00ffff);
-    patch::write_word(reinterpret_cast<void*>(0x80291AEC), 0x2c00ffff);
+    patch::write_word(reinterpret_cast<void*>(0x802858D4), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x802874BC), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x8028751C), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x802880EC), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x802881D4), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x802883B4), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x802886B8), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x8028BF44), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x8028C1CC), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x8028C650), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x8028CA84), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x80291338), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x80291420), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x80291664), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x80291904), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x80291930), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x80291960), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x8029198C), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(reinterpret_cast<void*>(0x80291AEC), PPC_INSTR_CMPWI(PPC_R0, -1));
+
     // Wormhole surface fix
     // Always return 'true' for a specific function that checks if the stage ID
     // belongs to a slot normally used for party games.

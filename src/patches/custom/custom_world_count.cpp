@@ -46,8 +46,8 @@ void init_sel_ngc() {
     // Update the practice mode story mode display counter to show the proper number of worlds
 
     // Visually update the indicator
-    patch::write_word(reinterpret_cast<void*>(0x8090dbd0),
-                      (0x2c1a0000 | world_count));
+    patch::write_word(reinterpret_cast<void*>(0x8090DBD0),
+                      PPC_INSTR_CMPWI(PPC_R26, world_count));
     // Update the indicator logic
     patch::write_word(reinterpret_cast<void*>(0x80900f08),
                       PPC_INSTR_LI(PPC_R29, world_count));
