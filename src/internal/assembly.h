@@ -4,6 +4,18 @@
 
 namespace main {
 
+struct NewStoryStageEntry {
+    u16 stage_id;  // 0 to 420
+    u8 difficulty; // 0 to 10
+    u16 time_limit;// 0 to 360 seconds
+    bool set;      // to detect missing/duplicate entries
+};
+
+static constexpr int WORLD_COUNT = 10;
+static constexpr int STAGES_PER_WORLD = 10;
+
+extern NewStoryStageEntry new_story_entries[WORLD_COUNT][STAGES_PER_WORLD];
+
 extern "C" {
 
 // Assembly overwrite functions

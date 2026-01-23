@@ -102,6 +102,116 @@ void parse_menu_option_toggles(char* buf) {
     } while (buf < end_of_section);
 }
 
+static void skip_spaces(char*& p) {
+    while (*p == ' ' || *p == '\t') p++;
+}
+
+static bool parse_csv_ints(char* value, int* out, int count) {
+    char* p = value;
+
+    for (int i = 0; i < count; ++i) {
+        skip_spaces(p);
+
+        // Parse integer
+        out[i] = mkb::atoi(p);
+
+        // Find next comma if more values expected
+        if (i + 1 < count) {
+            p = mkb::strchr(p, ',');
+            if (!p) return false;
+            p++;// skip comma
+        }
+    }
+
+    return true;
+}
+
+
+// Parses W<world>-<stage>
+static bool parse_world_stage_key(const char* key, int& world_idx, int& stage_idx) {
+    if (key == nullptr || key[0] != 'W') return false;
+
+    // world starts after 'W'
+    int w = mkb::atoi(const_cast<char*>(key + 1));
+
+    // find '-'
+    char* dash = mkb::strchr(const_cast<char*>(key), '-');
+    if (!dash) return false;
+
+    // stage starts after '-'
+    int s = mkb::atoi(dash + 1);
+
+    if (w < 1 || w > main::WORLD_COUNT) return false;
+    if (s < 1 || s > main::STAGES_PER_WORLD) return false;
+
+    world_idx = w - 1;
+    stage_idx = s - 1;
+    return true;
+}
+
+
+void parse_story_mode_entries(char* buf) {
+    buf = mkb::strchr(buf, '\n') + 1;
+
+    char* end_of_section = mkb::strchr(buf, '}');
+    char key[64] = {0};
+    char value[128] = {0};
+
+    do {
+        char *key_start, *key_end, *end_of_line;
+        key_start = mkb::strchr(buf, '\t') + 1;
+        key_end = mkb::strchr(buf, ':');
+        MOD_ASSERT_MSG(key_start < key_end,
+                       "Key start after key end, did you start your key with a tab and not spaces?");
+        end_of_line = mkb::strchr(buf, '\n');
+
+        mkb::strncpy(key, key_start, (key_end - key_start));
+        mkb::strncpy(value, key_end + 2, (end_of_line - key_end) - 2);
+
+        int world_idx = 0, stage_idx = 0;
+        MOD_ASSERT_MSG(
+            parse_world_stage_key(key, world_idx, stage_idx),
+            "Invalid story key format (expected W<1-10>-<1-10>)");
+
+        int vals[3] = {0};
+
+        MOD_ASSERT_MSG(
+            parse_csv_ints(value, vals, 3),
+            "Invalid story value format (expected: stage ID, time limit, difficulty)");
+
+        int stage_id_i = vals[0];
+        int time_limit_i = vals[1];
+        int difficulty_i = vals[2];
+
+
+        MOD_ASSERT_MSG(stage_id_i >= 0 && stage_id_i <= 420, "Stage ID out of range (0-420)");
+        MOD_ASSERT_MSG(time_limit_i >= 0 && time_limit_i <= 360, "Time limit out of range (0-360)");
+        MOD_ASSERT_MSG(difficulty_i >= 0 && difficulty_i <= 10, "Difficulty out of range (0-10)");
+
+        main::NewStoryStageEntry& entry =
+            main::new_story_entries[world_idx][stage_idx];
+
+        MOD_ASSERT_MSG(!entry.set, "Duplicate Story Mode entry for same world/stage");
+
+        entry.stage_id = static_cast<u16>(stage_id_i);
+        entry.time_limit = static_cast<u16>(time_limit_i);
+        entry.difficulty = static_cast<u8>(difficulty_i);
+        entry.set = true;
+
+        buf = end_of_line + 1;
+        mkb::memset(key, '\0', sizeof(key));
+        mkb::memset(value, '\0', sizeof(value));
+    } while (buf < end_of_section);
+
+    for (int w = 0; w < main::WORLD_COUNT; ++w) {
+        for (int s = 0; s < main::STAGES_PER_WORLD; ++s) {
+            MOD_ASSERT_MSG(main::new_story_entries[w][s].set, "Missing Story Mode entry");
+        }
+    }
+
+    LOG("Story Mode Entries loaded at: 0x%X", &main::new_story_entries);
+}
+
 void parse_function_toggles(char* buf) {
     // Enters from section parsing, so skip to the next line
     buf = mkb::strchr(buf, '\n') + 1;
@@ -218,6 +328,10 @@ void parse_config() {
                     else if (STREQ(section, "Music IDs")) {
                         parse_stageid_list(section_end, main::bgm_id_lookup);
                         LOG("Music ID list loaded at: 0x%X", &main::bgm_id_lookup);
+                    }
+
+                    else if (STREQ(section, "Story Mode Entries")) {
+                        parse_story_mode_entries(section_end);
                     }
 
                     else {
