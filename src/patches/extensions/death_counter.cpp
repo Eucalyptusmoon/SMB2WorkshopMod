@@ -1,6 +1,7 @@
 #include "death_counter.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -72,10 +73,10 @@ void death_counter_sprite_tick(u8* status, mkb::Sprite* sprite) {
 void init_main_game() {
     mkb::memset(death_count, 0, sizeof(death_count));
 
-    patch::write_nop(reinterpret_cast<void*>(0x808fa4f4));
-    patch::write_nop(reinterpret_cast<void*>(0x802b8210));
+    patch::write_nop(relutil::relocate_addr(0x808fa4f4));
+    patch::write_nop(relutil::relocate_addr(0x802b8210));
 
-    patch::write_branch_bl(reinterpret_cast<void*>(0x808fa560), reinterpret_cast<void*>(update_death_count));
+    patch::write_branch_bl(relutil::relocate_addr(0x808fa560), reinterpret_cast<void*>(update_death_count));
     patch::write_branch(reinterpret_cast<void*>(mkb::sprite_monkey_counter_tick),
                         reinterpret_cast<void*>(death_counter_sprite_tick));
 }
@@ -84,7 +85,7 @@ void init_main_game() {
 // menu, change the check for unlocked monkeys to be less than 4 to less than
 // 255, effectively never displaying the Gameplay Settings menu
 void init_sel_ngc() {
-    patch::write_word(reinterpret_cast<void*>(0x808ffb14), PPC_INSTR_CMPWI(PPC_R3, 255));
+    patch::write_word(relutil::relocate_addr(0x808ffb14), PPC_INSTR_CMPWI(PPC_R3, 255));
 }
 
 }// namespace death_counter

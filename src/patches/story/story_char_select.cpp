@@ -4,6 +4,7 @@
 #include "internal/assembly.h"
 #include "internal/pad.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
 
@@ -32,7 +33,7 @@ static mkb::undefined4** monkey_name_lookup[] = {AIAI, MEEMEE, BABY, GONGON, HIH
 // Overrides the return value of certain functions to force the chosen monkey to be
 // preloaded in place of AiAi
 void init_main_loop() {
-    patch::write_branch_bl(reinterpret_cast<void*>(0x803daffc),
+    patch::write_branch_bl(relutil::relocate_addr(0x803daffc),
                            reinterpret_cast<void*>(main::get_monkey_id_hook));
 }
 
@@ -49,19 +50,19 @@ void set_nameentry_filename() {
 // Also calls the function to set the default filename to the name of the selected
 // monkey, rather than deafulting to 'AIAI'.
 void init_main_game() {
-    patch::write_branch_bl(reinterpret_cast<void*>(0x808fcac4),
+    patch::write_branch_bl(relutil::relocate_addr(0x808fcac4),
                            reinterpret_cast<void*>(main::get_monkey_id_hook));
-    patch::write_branch_bl(reinterpret_cast<void*>(0x808ff120),
+    patch::write_branch_bl(relutil::relocate_addr(0x808ff120),
                            reinterpret_cast<void*>(main::get_monkey_id_hook));
-    patch::write_branch_bl(reinterpret_cast<void*>(0x80908894),
+    patch::write_branch_bl(relutil::relocate_addr(0x80908894),
                            reinterpret_cast<void*>(main::get_monkey_id_hook));
 
-    patch::write_branch_bl(reinterpret_cast<void*>(0x80906368),
+    patch::write_branch_bl(relutil::relocate_addr(0x80906368),
                            reinterpret_cast<void*>(set_nameentry_filename));
-    patch::write_nop(reinterpret_cast<void*>(0x8090636c));
-    patch::write_nop(reinterpret_cast<void*>(0x80906370));
-    patch::write_nop(reinterpret_cast<void*>(0x80906374));
-    patch::write_nop(reinterpret_cast<void*>(0x80906378));
+    patch::write_nop(relutil::relocate_addr(0x8090636c));
+    patch::write_nop(relutil::relocate_addr(0x80906370));
+    patch::write_nop(relutil::relocate_addr(0x80906374));
+    patch::write_nop(relutil::relocate_addr(0x80906378));
 }
 
 // Assign the correct 'next screen' variables to redirect Story Mode to the
@@ -85,20 +86,20 @@ void tick() {
         // If Story Mode is selected on the menu...
         if (mkb::g_focused_maingame_menu == 0) {
             // ...change the screen stack check for what next screen to throw us at to 0xff
-            patch::write_word(reinterpret_cast<void*>(0x808fbec8), 0x2c0000ff);
+            patch::write_word(relutil::relocate_addr(0x808fbec8), 0x2c0000ff);
             // Change the screen stack check for what next screen to throw us at to the Mode Select menu
-            patch::write_word(reinterpret_cast<void*>(0x808fc8a0), 0x2c000007);
+            patch::write_word(relutil::relocate_addr(0x808fc8a0), 0x2c000007);
             // Change the next screen value to the one for entering Story Mode
-            patch::write_word(reinterpret_cast<void*>(0x808fc8e0), 0x38a0000c);
+            patch::write_word(relutil::relocate_addr(0x808fc8e0), 0x38a0000c);
         }
         else {
             // Original instructions
             // Change the screen stack check for what next screen to throw us at to the Mode Select menu
-            patch::write_word(reinterpret_cast<void*>(0x808fbec8), 0x2c000007);
+            patch::write_word(relutil::relocate_addr(0x808fbec8), 0x2c000007);
             // Change the screen stack check for what next screen to throw us at to the Bowling menu
-            patch::write_word(reinterpret_cast<void*>(0x808fc8a0), 0x2c000024);
+            patch::write_word(relutil::relocate_addr(0x808fc8a0), 0x2c000024);
             // Change the next screen value to the one for entering Bowling
-            patch::write_word(reinterpret_cast<void*>(0x808fc8e0), 0x38a00027);
+            patch::write_word(relutil::relocate_addr(0x808fc8e0), 0x38a00027);
         }
     }
 }

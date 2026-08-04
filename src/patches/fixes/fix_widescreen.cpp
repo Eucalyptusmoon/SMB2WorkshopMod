@@ -1,6 +1,7 @@
 #include "fix_widescreen.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
 #include "patches/custom/custom_font_color.h"
@@ -211,15 +212,15 @@ void init_main_loop() {
         reinterpret_cast<void*>(mkb::create_final_stage_sprite),
         reinterpret_cast<void*>(create_new_final_stage_sprite));
     patch::write_branch_bl(
-        reinterpret_cast<void*>(0x8033c39c),
+        relutil::relocate_addr(0x8033c39c),
         reinterpret_cast<void*>(fix_minimap));
     patch::write_branch_bl(
-        reinterpret_cast<void*>(0x80338050),
+        relutil::relocate_addr(0x80338050),
         reinterpret_cast<void*>(fix_how_to));
-    patch::write_word(reinterpret_cast<void*>(0x803e7a28), 0x43b40000);
-    patch::write_word(reinterpret_cast<void*>(0x8032e0e4), (0x6400a100));
-    patch::write_word(reinterpret_cast<void*>(0x8032e798), (0x6400a100));
-    patch::write_word(reinterpret_cast<void*>(0x8032f268), (0x6400a100));
+    patch::write_word(relutil::relocate_addr(0x803e7a28), 0x43b40000);
+    patch::write_word(relutil::relocate_addr(0x8032e0e4), (0x6400a100));
+    patch::write_word(relutil::relocate_addr(0x8032e798), (0x6400a100));
+    patch::write_word(relutil::relocate_addr(0x8032f268), (0x6400a100));
 }
 
 
@@ -233,10 +234,10 @@ void init_main_loop() {
 
 void tick() {
     if (mkb::sub_mode == mkb::SMD_SEL_NGC_MAIN) {
-        patch::write_word(reinterpret_cast<void*>(0x80287cf8), 0x418200a8);// original instruction
+        patch::write_word(relutil::relocate_addr(0x80287cf8), 0x418200a8);// original instruction
     }
     else {
-        patch::write_nop(reinterpret_cast<void*>(0x80287cf8));// nops a branch to the FOV-modifying code
+        patch::write_nop(relutil::relocate_addr(0x80287cf8));// nops a branch to the FOV-modifying code
     }
     if (mkb::main_mode == mkb::MD_GAME) {
         if (mkb::widescreen_mode == 0) {
@@ -247,19 +248,19 @@ void tick() {
         }
     }
     if (mkb::widescreen_mode == 0) {
-        patch::write_word(reinterpret_cast<void*>(0x8032e048), (0xc01f0038));
-        patch::write_word(reinterpret_cast<void*>(0x8032e6b0), (0xc01f0038));
-        patch::write_word(reinterpret_cast<void*>(0x803e7cf4), (0x43f50000));
-        patch::write_word(reinterpret_cast<void*>(0x803e82f8), (0x40590000));
-        patch::write_word(reinterpret_cast<void*>(0x803e8404), (0x44200000));
+        patch::write_word(relutil::relocate_addr(0x8032e048), (0xc01f0038));
+        patch::write_word(relutil::relocate_addr(0x8032e6b0), (0xc01f0038));
+        patch::write_word(relutil::relocate_addr(0x803e7cf4), (0x43f50000));
+        patch::write_word(relutil::relocate_addr(0x803e82f8), (0x40590000));
+        patch::write_word(relutil::relocate_addr(0x803e8404), (0x44200000));
     }
     else {
-        patch::write_word(reinterpret_cast<void*>(0x8032e048), (0xc01f00ac));
-        patch::write_word(reinterpret_cast<void*>(0x803e7a3c), (0x43d98000));
-        patch::write_word(reinterpret_cast<void*>(0x8032e6b0), (0xc01f00ac));
-        patch::write_word(reinterpret_cast<void*>(0x803e7cf4), (0x4414c000));
-        patch::write_word(reinterpret_cast<void*>(0x803e82f8), (0x405b8000));
-        patch::write_word(reinterpret_cast<void*>(0x803e8404), (0x44558000));
+        patch::write_word(relutil::relocate_addr(0x8032e048), (0xc01f00ac));
+        patch::write_word(relutil::relocate_addr(0x803e7a3c), (0x43d98000));
+        patch::write_word(relutil::relocate_addr(0x8032e6b0), (0xc01f00ac));
+        patch::write_word(relutil::relocate_addr(0x803e7cf4), (0x4414c000));
+        patch::write_word(relutil::relocate_addr(0x803e82f8), (0x405b8000));
+        patch::write_word(relutil::relocate_addr(0x803e8404), (0x44558000));
     }
 }
 

@@ -868,48 +868,48 @@ typedef struct GComponentDefList GComponentDefList, *PGComponentDefList;
 typedef struct GmaBuffer GmaBuffer, *PGmaBuffer;
 
 enum {
-    SCENE16_COMMON=0,
-    SCENE16_MAIN=1,
-    SCENE16_DUMMY1=2,
-    SCENE16_DUMMY2=3,
-    SCENE16_DUMMY3=4,
-    SCENE16_DUMMY4=5,
-    SCENE16_DUMMY5=6,
-    SCENE16_DUMMY6=7,
-    SCENE16_DUMMY7=8,
-    SCENE16_DUMMY8=9,
-    SCENE16_DUMMY9=10,
-    SCENE16_DUMMY10=11,
-    SCENE16_RACE=12,
-    SCENE16_FGT=13,
-    SCENE16_PILOT=14,
-    SCENE16_GOLF=15,
-    SCENE16_BOWL=16,
-    SCENE16_BILL=17,
-    SCENE16_BOAT=18,
-    SCENE16_DOGF=19,
-    SCENE16_TENNIS=20,
-    SCENE16_BBALL=21,
-    SCENE16_GUNS=22,
-    SCENE16_ADV=23,
-    SCENE16_SEL=24,
-    SCENE16_COMMEND=25,
-    SCENE16_SCENE1A=26,
-    SCENE16_SCENE1B=27,
-    SCENE16_SCENE2=28,
-    SCENE16_SCENE3=29,
-    SCENE16_SCENE4=30,
-    SCENE16_SCENE5=31,
-    SCENE16_SCENE6=32,
-    SCENE16_SCENE7=33,
-    SCENE16_SCENE8=34,
-    SCENE16_SCENE9=35,
-    SCENE16_SCENE10=36,
-    SCENE16_LASTSCENE=37,
-    SCENE16_ENDING1=38,
-    SCENE16_ENDING2=39,
-    SCENE16_ENDING3=40,
-    SCENE16_ENDING4=41
+    SCENE_COMMON=0,
+    SCENE_MAIN=1,
+    SCENE_DUMMY1=2,
+    SCENE_DUMMY2=3,
+    SCENE_DUMMY3=4,
+    SCENE_DUMMY4=5,
+    SCENE_DUMMY5=6,
+    SCENE_DUMMY6=7,
+    SCENE_DUMMY7=8,
+    SCENE_DUMMY8=9,
+    SCENE_DUMMY9=10,
+    SCENE_DUMMY10=11,
+    SCENE_RACE=12,
+    SCENE_FGT=13,
+    SCENE_PILOT=14,
+    SCENE_GOLF=15,
+    SCENE_BOWL=16,
+    SCENE_BILL=17,
+    SCENE_BOAT=18,
+    SCENE_DOGF=19,
+    SCENE_TENNIS=20,
+    SCENE_BBALL=21,
+    SCENE_GUNS=22,
+    SCENE_ADV=23,
+    SCENE_SEL=24,
+    SCENE_COMMEND=25,
+    SCENE_SCENE1A=26,
+    SCENE_SCENE1B=27,
+    SCENE_SCENE2=28,
+    SCENE_SCENE3=29,
+    SCENE_SCENE4=30,
+    SCENE_SCENE5=31,
+    SCENE_SCENE6=32,
+    SCENE_SCENE7=33,
+    SCENE_SCENE8=34,
+    SCENE_SCENE9=35,
+    SCENE_SCENE10=36,
+    SCENE_LASTSCENE=37,
+    SCENE_ENDING1=38,
+    SCENE_ENDING2=39,
+    SCENE_ENDING3=40,
+    SCENE_ENDING4=41
 };
 typedef undefined2 SceneId16;
 
@@ -932,6 +932,13 @@ enum {
     FACE_SOBTALK=9
 };
 typedef undefined2 ApeFace;
+
+enum {
+    G_APE_RENDER_TRANSPARENT=1048576,
+    G_APE_RENDER_LOWER_Y=16777216,
+    G_APE_RENDER_UNCULLED=67108864
+};
+typedef undefined4 ApeRenderFlag;
 
 typedef struct Quat Quat, *PQuat;
 
@@ -1137,10 +1144,10 @@ struct Ape {
     struct GmaModel * g_eye_models1[15]; /* Not unique models, repeated! Blink pattern? */
     struct GmaModel * g_eye_models2[15]; /* Same underlying models as above, but blink pattern may differ between characters?!? */
     struct GmaModel * face_models[10];
-    struct GmaModel * hand_l_fist_model;
-    struct GmaModel * hand_l_flat_model;
-    struct GmaModel * hand_r_fist_model;
-    struct GmaModel * hand_r_flat_model;
+    struct GmaModel * handl_fist_model;
+    struct GmaModel * handl_flat_model;
+    struct GmaModel * handr_fist_model;
+    struct GmaModel * handr_flat_model;
     float float_0x214;
     short field82_0x218;
     undefined field_0x21a[0x2];
@@ -1152,7 +1159,7 @@ struct Ape {
     undefined4 field111_0x23c;
     undefined4 field112_0x240;
     ApeCharacter  chara;
-    u32 flag1;
+    ApeRenderFlag  g_render_flags;
     undefined4 field115_0x24c;
     undefined4 field116_0x250;
     undefined4 field117_0x254;
@@ -2283,50 +2290,6 @@ struct SmStageInfo { /* A list of 10 of these is used to define a world */
 } __attribute__((__packed__));
 static_assert(sizeof(SmStageInfo) == 0x4);
 
-enum {
-    SCENE_COMMON=0,
-    SCENE_MAIN=1,
-    SCENE_DUMMY1=2,
-    SCENE_DUMMY2=3,
-    SCENE_DUMMY3=4,
-    SCENE_DUMMY4=5,
-    SCENE_DUMMY5=6,
-    SCENE_DUMMY6=7,
-    SCENE_DUMMY7=8,
-    SCENE_DUMMY8=9,
-    SCENE_DUMMY9=10,
-    SCENE_DUMMY10=11,
-    SCENE_RACE=12,
-    SCENE_FGT=13,
-    SCENE_PILOT=14,
-    SCENE_GOLF=15,
-    SCENE_BOWL=16,
-    SCENE_BILL=17,
-    SCENE_BOAT=18,
-    SCENE_DOGF=19,
-    SCENE_TENNIS=20,
-    SCENE_BBALL=21,
-    SCENE_GUNS=22,
-    SCENE_ADV=23,
-    SCENE_SEL=24,
-    SCENE_COMMEND=25,
-    SCENE_SCENE1A=26,
-    SCENE_SCENE1B=27,
-    SCENE_SCENE2=28,
-    SCENE_SCENE3=29,
-    SCENE_SCENE4=30,
-    SCENE_SCENE5=31,
-    SCENE_SCENE6=32,
-    SCENE_SCENE7=33,
-    SCENE_SCENE8=34,
-    SCENE_SCENE9=35,
-    SCENE_SCENE10=36,
-    SCENE_LASTSCENE=37,
-    SCENE_ENDING1=38,
-    SCENE_ENDING2=39,
-    SCENE_ENDING3=40,
-    SCENE_ENDING4=41
-};
 typedef undefined4 SceneId32;
 
 enum {
@@ -3475,10 +3438,6 @@ struct Effect {
 } __attribute__((__packed__));
 static_assert(sizeof(Effect) == 0xb0);
 
-enum { /* Whether ape models are skinning or stitching? */
-    DEFORM32_SKINNING=0,
-    DEFORM32_STITCHING=1
-};
 typedef undefined4 DeformType32;
 
 enum {
@@ -5903,7 +5862,7 @@ extern "C" {
     extern undefined * switchdataD_8037ed54;
     extern pointer switchdataD_8037ed78;
     extern undefined * switchdataD_8037edf8;
-    extern struct theme_light theme_lights[42];
+    extern struct theme_light theme_lights[41];
     extern char init_common_p_lz[17];
     extern char init_common_lz[15];
     extern struct BmpInfo bmp_infos[25];
@@ -6491,7 +6450,7 @@ extern "C" {
     extern struct ARCHandle arc_file_handle;
     extern void * skl_arc;
     extern Mtx g_common_ape_mtx;
-    extern float g_ape_floats[64];
+    extern float g_ape_alphas[64];
     extern int ape_ref_count_table[136];
     extern struct Ape * registered_apes[64];
     extern undefined4 total_apes_registered;
@@ -6512,15 +6471,14 @@ extern "C" {
     extern undefined4 g_some_author_cutscene_flag;
     extern undefined4 g_playpoint_msg_counter;
     extern struct UnlockInfo unlock_info;
-    extern byte sprite_decoration_bar_tick[1];
     extern float view_stage_aspect_ratio;
     extern pointer switchdataD_804ee064;
     extern undefined * story_mode_funcs;
     extern struct StoryStagePreviewParam MAIN_GAME_STORY_STAGE_PREVIEW_PARAMS[100];
-    extern char * world_names[60];
     extern undefined1 ape_story_select_anim_table;
     extern pointer switchdataD_804eee68;
     extern pointer switchdataD_804eee88;
+    extern pointer g_unk_difficulty1;
     extern pointer switchdataD_804eef70;
     extern pointer switchdataD_804ef084;
     extern pointer switchdataD_804ef11c;
@@ -6609,6 +6567,7 @@ extern "C" {
     extern undefined4 g_are_story_select_sprites_visible;
     extern undefined2 g_amount_of_stages_per_world;
     extern undefined2 g_amount_of_beaten_stages_in_world;
+    extern undefined4 g_difficulty_y_offset;
     extern undefined2 g_story_select_sprites_anim_state;
     extern undefined2 g_story_select_sprites_timer;
     extern float some_ape_float;
@@ -8986,6 +8945,7 @@ extern "C" {
     void ball_sounds_gameplay(struct Ball * ball);
     G_BallMode * ball_movement_sparks(struct Ball * ball);
     void set_visual_scale(struct Ball * ball);
+    void draw_storysel_ball_clear_half(Mtx * mtx, int lod);
     void g_draw_ball_and_ape(void);
     void g_something_with_view_stage_and_ball(void);
     void collide_ball_with_stage(struct PhysicsBall * physicsball, struct StagedefFileHeader * stagedef);
@@ -9065,7 +9025,6 @@ extern "C" {
     void g_draw_start_position_marker(void);
     void g_draw_stage(void);
     void g_draw_collision_triangles(void);
-    void g_draw_transparency_type_a_models(void);
     bool is_stage_id_348_revolution(void);
     void g_special_handler_for_st348_revolution(void);
     void g_handle_hardcoded_special_case_stages(void);
@@ -9577,7 +9536,6 @@ extern "C" {
     void calc_sprite_bounds(struct Sprite * sprite, s32 * left, s32 * top, s32 * right, s32 * bottom);
     void g_get_font_char_width(char * character, Font32  font, struct FontDefinition * g_font_struct);
     double g_get_font_char_width_scaling(char * character, Font32  font);
-    undefined * g_some_textdraw_control_code_parse(uint * state, byte * text, uint * color, int * consumed, uint * font);
     void textdraw_reset(void);
     void textdraw_set_font(Font32  font_type);
     void textdraw_set_mul_color(uint param_1);
@@ -9612,7 +9570,7 @@ extern "C" {
     int g_get_font_def_aram_flag(int param_1);
     void g_get_string_sprite_width_2(char * param_1);
     void g_call_get_string_sprite_width_3_discard_result(char * param_1);
-    double textdraw_get_pixel_width_of_string_as_double(char * string);
+    f32 textdraw_get_pixel_width_of_string_as_f32(char * string);
     float textdraw_get_pixel_width_of_string(char * str);
     double textdraw_get_pixel_height_of_string(char * param_1);
     void g_smth_with_fonts_chara_load_wrapper_discard_result(char * param_1);
@@ -9635,7 +9593,7 @@ extern "C" {
     void textdraw_print_internal_func_1(byte * string);
     float textdraw_chara_load(char * string, BOOL32 stop_on_newline, TextdrawCharaLoadReturnParameter  return_parameter);
     double g_get_string_sprite_width_3(char * param_1);
-    double textdraw_get_pixel_width_of_string_as_double_child(char * string);
+    f32 textdraw_get_pixel_width_of_string_as_f32_child(char * string);
     float textdraw_get_pixel_width_of_string_child(char * string);
     int g_smth_with_fonts_chara_load_wrapper(char * param_1);
     int textdraw_get_line_count_of_string_child(char * param_1);
@@ -10211,6 +10169,7 @@ extern "C" {
     void g_handle_story_clear_stage_balls(short param_1);
     void sprite_clear_floors_tick(u8 * status, struct Sprite * sprite);
     void sprite_clear_floors_disp(struct Sprite * sprite);
+    void sprite_decoration_bar_tick(u8 * param_1, struct Sprite * param_2);
     void sprite_decoration_bar_disp(struct Sprite * sprite);
     void sprite_world_tick(u8 * status, struct Sprite * sprite);
     void sprite_world_disp(struct Sprite * sprite);

@@ -1,6 +1,7 @@
 #include "remove_desert_haze.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -16,7 +17,7 @@ TICKABLE_DEFINITION((
 // haze for the specific desert theme ID, the theme ID is compared to 0xffff
 // instead of 0x7.
 void init_main_loop() {
-    patch::write_word(reinterpret_cast<void*>(0x802e4ed8), PPC_INSTR_CMPWI(PPC_R0, -1));
+    patch::write_word(relutil::relocate_addr(0x802e4ed8), PPC_INSTR_CMPWI(PPC_R0, -1));
 }
 
 }// namespace remove_desert_haze

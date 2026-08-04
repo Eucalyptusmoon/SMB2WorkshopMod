@@ -1,6 +1,7 @@
 #include "fix_minimap_color.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -13,7 +14,7 @@ TICKABLE_DEFINITION((
 
 void init_main_loop() {
     // Overwrite Baby's minimap color with pure white like the other monkeys
-    patch::write_word(reinterpret_cast<void*>(0x80494494), (0x00ffffff));
+    patch::write_word(relutil::relocate_addr(0x80494494), (0x00ffffff));
 }
 
 }// namespace fix_minimap_color

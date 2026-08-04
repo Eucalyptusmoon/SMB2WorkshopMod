@@ -5,6 +5,20 @@
 
 namespace relutil {
 
+enum class ModuleId : u32 {
+    Dol = 0,
+    MainLoop = 1,
+    MainGame = 2,
+    SelNgc = 3,
+};
+
+struct Region {
+    ModuleId id;
+    void* vanilla_ptr;
+    u32 size;
+    bool is_bss;
+};
+
 struct RelEntry {
     u16 offset;
     u8 type;
@@ -45,6 +59,16 @@ struct RelHeader {
 };
 static_assert(sizeof(RelHeader) == 0x4C);
 
+static Region s_vanilla_regions[] = {
+    {ModuleId::Dol, reinterpret_cast<void*>(0x80000000), 0x199F84, false},
+    {ModuleId::MainLoop, reinterpret_cast<void*>(0x80270100), 0x2DC7CC, false},
+    {ModuleId::MainLoop, reinterpret_cast<void*>(0x8054C8E0), 0xDDA4C, true},
+    {ModuleId::MainGame, reinterpret_cast<void*>(0x808F3FE0), 0x8B484, false},
+    {ModuleId::MainGame, reinterpret_cast<void*>(0x8097F4A0), 0x65F0, true},
+    {ModuleId::SelNgc, reinterpret_cast<void*>(0x808F3FE0), 0x55C87, false},
+    {ModuleId::SelNgc, reinterpret_cast<void*>(0x80949CA0), 0x8BD4, true},
+};
+
 void* compute_mainloop_reldata_boundary(void* start) {
     RelHeader* module = *reinterpret_cast<RelHeader**>(0x800030C8);
     for (u32 imp_idx = 0; imp_idx * sizeof(Imp) < module->imp_size; imp_idx++) {
@@ -62,6 +86,42 @@ void* compute_mainloop_reldata_boundary(void* start) {
         for (; first_valid[rel_idx].type != 203; rel_idx++)
             ;
         return &first_valid[rel_idx + 1];
+    }
+    return nullptr;
+}
+
+static RelHeader* find_loaded_rel(ModuleId id) {
+    RelHeader* module = *reinterpret_cast<RelHeader**>(0x800030C8);
+    while (module != nullptr) {
+        if (module->id == static_cast<u32>(id)) {
+            return module;
+        }
+        module = module->next;
+    }
+    return nullptr;
+}
+
+void* relocate_addr(u32 vanilla_addr) {
+    for (const auto& region: s_vanilla_regions) {
+        u32 region_addr = reinterpret_cast<u32>(region.vanilla_ptr);
+        if (vanilla_addr < region_addr || vanilla_addr >= region_addr + region.size) continue;
+
+        if (region.id == ModuleId::Dol) return reinterpret_cast<void*>(vanilla_addr);
+
+        RelHeader* module = find_loaded_rel(region.id);
+        if (module == nullptr) return nullptr;
+
+        u32 live_addr;
+        if (region.is_bss) {
+            if (region.id == ModuleId::MainLoop) {
+                live_addr = reinterpret_cast<u32>(mkb::mainloop_rel_buffer_info.bss_buffer);
+            } else {
+                live_addr = reinterpret_cast<u32>(mkb::additional_rel_buffer_info.bss_buffer);
+            }
+        } else {
+            live_addr = reinterpret_cast<u32>(module);
+        }
+        return reinterpret_cast<void*>(live_addr + vanilla_addr - region_addr);
     }
     return nullptr;
 }

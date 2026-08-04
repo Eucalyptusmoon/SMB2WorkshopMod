@@ -1,6 +1,7 @@
 #include "fix_goal_types.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -16,8 +17,8 @@ TICKABLE_DEFINITION((
 // preventing score and warp issues on stages with loads of
 // goals
 void init_main_loop() {
-    patch::write_word(reinterpret_cast<void*>(0x802d81a8), PPC_INSTR_CMPWI(PPC_R8, 255));
-    patch::write_word(reinterpret_cast<void*>(0x8031373c), PPC_INSTR_CMPWI(PPC_R5, 255));
+    patch::write_word(relutil::relocate_addr(0x802d81a8), PPC_INSTR_CMPWI(PPC_R8, 255));
+    patch::write_word(relutil::relocate_addr(0x8031373c), PPC_INSTR_CMPWI(PPC_R5, 255));
 }
 
 }// namespace fix_goal_types
