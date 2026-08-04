@@ -1,6 +1,7 @@
 #include "fix_final_stage.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -53,27 +54,27 @@ void fix_final_stage_sprite_position() {
     if ((mkb::mode_info.ball_mode & mkb::BALLMODE_ON_BONUS_STAGE | mkb::BALLMODE_ON_FINAL_STAGE) == (mkb::BALLMODE_ON_BONUS_STAGE | mkb::BALLMODE_ON_FINAL_STAGE)) {
         // Repoint sprite positions if we're on a FINAL and BONUS stage
         // Any values written here overwrite unused portions in memory
-        patch::write_word(reinterpret_cast<void*>(0x8032bf10), 0xc01f012c);
-        patch::write_word(reinterpret_cast<void*>(0x803e7abc), 0x43a50000);
-        patch::write_word(reinterpret_cast<void*>(0x8032d1e4), 0xc01f0244);
-        patch::write_word(reinterpret_cast<void*>(0x803e7bd4), 0x43eb0000);
-        patch::write_word(reinterpret_cast<void*>(0x8032d268), 0xc87f00b8);
-        patch::write_word(reinterpret_cast<void*>(0x803e7a48), 0x4073e000);
-        patch::write_word(reinterpret_cast<void*>(0x803e7a4c), 0x00000000);
+        patch::write_word(relutil::relocate_addr(0x8032bf10), 0xc01f012c);
+        patch::write_word(relutil::relocate_addr(0x803e7abc), 0x43a50000);
+        patch::write_word(relutil::relocate_addr(0x8032d1e4), 0xc01f0244);
+        patch::write_word(relutil::relocate_addr(0x803e7bd4), 0x43eb0000);
+        patch::write_word(relutil::relocate_addr(0x8032d268), 0xc87f00b8);
+        patch::write_word(relutil::relocate_addr(0x803e7a48), 0x4073e000);
+        patch::write_word(relutil::relocate_addr(0x803e7a4c), 0x00000000);
         // By default, the function to fade the FINAL or BONUS stage sprite
         // only fades one at a time, so overwrite the special ID of the FINAL
         // stage one to something else so we can fade it ourselves
         // This special ID is used by a different sprite at other times, so we have to
         // reset it later
-        patch::write_word(reinterpret_cast<void*>(0x8032bf00), 0x3800000f);
+        patch::write_word(relutil::relocate_addr(0x8032bf00), 0x3800000f);
     }
     else {
         // Undo repoints
-        patch::write_word(reinterpret_cast<void*>(0x8032bf10), 0xc01f00f0);
-        patch::write_word(reinterpret_cast<void*>(0x8032d1e4), 0xc01f023c);
-        patch::write_word(reinterpret_cast<void*>(0x8032d268), 0xc87f0248);
+        patch::write_word(relutil::relocate_addr(0x8032bf10), 0xc01f00f0);
+        patch::write_word(relutil::relocate_addr(0x8032d1e4), 0xc01f023c);
+        patch::write_word(relutil::relocate_addr(0x8032d268), 0xc87f0248);
         // Reset special ID
-        patch::write_word(reinterpret_cast<void*>(0x8032bf00), 0x3800000e);
+        patch::write_word(relutil::relocate_addr(0x8032bf00), 0x3800000e);
     }
 }
 void handle_final_bonus() {

@@ -1,6 +1,7 @@
 #include "remove_volume_decrease_on_pause.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 
 namespace remove_volume_decrease_on_pause {
@@ -12,7 +13,7 @@ TICKABLE_DEFINITION((
 
 // Nop a call to a function that decreases in-game volume on pause
 void init_main_loop() {
-    patch::write_nop(reinterpret_cast<void*>(0x802a32a8));
+    patch::write_nop(relutil::relocate_addr(0x802a32a8));
 }
 
 }// namespace remove_volume_decrease_on_pause

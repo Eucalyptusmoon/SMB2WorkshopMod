@@ -1,6 +1,6 @@
 .global full_debug_text_color
+.extern full_debug_text_color_branchback
 
-// Hooked at 0x802aeca4 GC
 full_debug_text_color:
 
 lis r5, debug_text_color@h
@@ -12,7 +12,7 @@ mr r4, r5
 
 end:
 li r3, 1 // Overwritten instruction
-lis r5, 0x802a
-ori r5, r5, 0xeca8
+lis r5, full_debug_text_color_branchback@h
+ori r5, r5, full_debug_text_color_branchback@l
 mtctr r5
 bctr

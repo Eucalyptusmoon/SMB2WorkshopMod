@@ -1,6 +1,7 @@
 #include "remove_playpoints.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
 
@@ -16,24 +17,24 @@ TICKABLE_DEFINITION((
 
 void init_main_game() {
     // Removes playpoint screen when exiting challenge/story mode.
-    patch::write_nop(reinterpret_cast<void*>(0x808f9ecc));
-    patch::write_nop(reinterpret_cast<void*>(0x808f9eec));
+    patch::write_nop(relutil::relocate_addr(0x808f9ecc));
+    patch::write_nop(relutil::relocate_addr(0x808f9eec));
 
     // Removes playpoint screen after the 'game over' sequence.
-    patch::write_nop(reinterpret_cast<void*>(0x808f801c));
-    patch::write_nop(reinterpret_cast<void*>(0x808f803c));
+    patch::write_nop(relutil::relocate_addr(0x808f801c));
+    patch::write_nop(relutil::relocate_addr(0x808f803c));
 
     // Removes playpoint screen when saving game data in story mode.
-    patch::write_nop(reinterpret_cast<void*>(0x80274c94));
+    patch::write_nop(relutil::relocate_addr(0x80274c94));
 
     // Removes playpoint message on continue screen.
-    patch::write_nop(reinterpret_cast<void*>(0x808f653c));
-    patch::write_word(reinterpret_cast<void*>(0x803dcae0), 0x38600001);
+    patch::write_nop(relutil::relocate_addr(0x808f653c));
+    patch::write_word(relutil::relocate_addr(0x803dcae0), 0x38600001);
 }
 
 void init_sel_ngc() {
     // Disables gift menu
-    patch::write_nop(reinterpret_cast<void*>(0x808f9890));
+    patch::write_nop(relutil::relocate_addr(0x808f9890));
 }
 
 void tick() {

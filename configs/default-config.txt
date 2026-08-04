@@ -55,6 +55,12 @@
 // Fixes an issue where goal posts would not reflect properly, and makes any 
 // stage object with the effect bitflag 0x4 reflect in a reflective stage object.
 
+// merged-heaps
+//
+// Combines the game's main, stage, background, character, and replay heap into
+// one shared heap. This merges otherwise wasted slack space, allowing it to be used 
+// for larger level data.
+
 // enhance-reflective-surfaces (CURRENTLY UNAVAILABLE)
 //
 // Allows for arbitrarily many mirror planes on a stage, rendering the mirror plane
@@ -358,6 +364,7 @@
 	fix-spooky-action: disabled
 	fix-stobj-draw: disabled
 	fix-stage-object-reflection: disabled
+	merged-heaps: disabled
 	fix-storm-continue-platform: disabled
 	fix-transparency-type-b-texture-scroll: disabled
 	fix-view-stage: disabled
@@ -1483,4 +1490,3 @@
 	40: 0.60, 0.60, 0.60, 1.00, 1.00, 1.00, 0x2000, 0x6000
 	41: 0.60, 0.60, 0.60, 1.00, 1.00, 1.00, 0x1000, 0x6000
 }
-

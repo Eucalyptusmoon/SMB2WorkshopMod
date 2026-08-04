@@ -1,6 +1,7 @@
 #include "fix_view_stage.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -122,7 +123,7 @@ void init_main_game() {
         reinterpret_cast<void*>(mkb::g_smth_with_rendering_models_for_reflective_surfaces),
         reinterpret_cast<void*>(new_render_func));
     // Prevent background animations from animating twice as fast in 'View Stage'
-    patch::write_nop(reinterpret_cast<void*>(0x80912d90));
+    patch::write_nop(relutil::relocate_addr(0x80912d90));
 }
 
 }// namespace fix_view_stage

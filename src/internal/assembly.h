@@ -55,9 +55,6 @@ extern mkb::GXColor debug_text_color;
 
 extern bool debug_mode_enabled;
 
-// story_mode_music_fix
-void story_mode_music_hook();
-
 // stobj_reflection_fix
 void reflection_draw_stage_hook();
 void reflection_view_stage_hook();

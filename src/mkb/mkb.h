@@ -21,6 +21,9 @@ inline void GXTexCoord2f32(float s, float t) {
     GXWGFifo.v_f32 = t;
 }
 
+// Workshop Mod symbol retained separately from the generated Ghidra header.
+extern "C" char* world_names[60];
+
 }// namespace mkb
 
 // It's convenient to always use these types "as our own", without having to namespace-address them

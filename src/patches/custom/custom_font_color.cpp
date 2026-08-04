@@ -1,6 +1,7 @@
 #include "custom_font_color.h"
 
 #include "../internal/patch.h"
+#include "internal/relutil.h"
 #include "../internal/tickable.h"
 #include "../mkb/mkb.h"
 #include "../utils/ppcutil.h"
@@ -33,14 +34,14 @@ mkb::u32 bonus_stage_color = 0xFF8000;
 static patch::Tramp<decltype(&mkb::textdraw_set_mul_color)> s_textdraw_set_mul_color_tramp;
 
 void replace_lis_color(int reg, u32 loc, u32 color) {
-    patch::write_word(reinterpret_cast<void*>(loc), PPC_INSTR_LIS(reg, (color >> 16) & 0xff));// RR
-    patch::write_word(reinterpret_cast<void*>(loc + 4), PPC_INSTR_ORI(reg, (color & 0xffff)));// GGBB
+    patch::write_word(relutil::relocate_addr(loc), PPC_INSTR_LIS(reg, (color >> 16) & 0xff));// RR
+    patch::write_word(relutil::relocate_addr(loc + 4), PPC_INSTR_ORI(reg, (color & 0xffff)));// GGBB
 }
 
 void replace_3pt_color(u32 loc, u32 color) {
-    patch::write_word(reinterpret_cast<void*>(loc), 0x38000000 + ((color >> 16) & 0xff));   // RR
-    patch::write_word(reinterpret_cast<void*>(loc + 8), 0x38000000 + ((color >> 8) & 0xff));// GG
-    patch::write_word(reinterpret_cast<void*>(loc + 16), 0x38000000 + (color & 0xff));      // BB
+    patch::write_word(relutil::relocate_addr(loc), 0x38000000 + ((color >> 16) & 0xff));   // RR
+    patch::write_word(relutil::relocate_addr(loc + 8), 0x38000000 + ((color >> 8) & 0xff));// GG
+    patch::write_word(relutil::relocate_addr(loc + 16), 0x38000000 + (color & 0xff));      // BB
 }
 
 u32 form_color(u8 red, u8 green, u8 blue) {
@@ -111,7 +112,7 @@ void init_main_loop() {
         mkb::parse_avtext_color_codes,
         parse_avtext_color_codes_hook);
     patch::write_branch_bl(
-        reinterpret_cast<void*>(0x8032C588),
+        relutil::relocate_addr(0x8032C588),
         reinterpret_cast<void*>(set_some_stagename_colors));
 
     replace_3pt_color(0x80338c84, current_stage_info_color);  // Stage number RGB color
@@ -130,16 +131,16 @@ void init_main_loop() {
 
 void init_main_game() {
     patch::write_branch_bl(
-        reinterpret_cast<void*>(0x80900DF8),
+        relutil::relocate_addr(0x80900DF8),
         reinterpret_cast<void*>(set_some_stagename_colors));
 }
 
 void init_sel_ngc() {
     patch::write_branch_bl(
-        reinterpret_cast<void*>(0x8090C5F0),
+        relutil::relocate_addr(0x8090C5F0),
         reinterpret_cast<void*>(set_menu_title_color));
     patch::write_branch_bl(
-        reinterpret_cast<void*>(0x8090C7E8),
+        relutil::relocate_addr(0x8090C7E8),
         reinterpret_cast<void*>(set_menu_title_color));
 }
 

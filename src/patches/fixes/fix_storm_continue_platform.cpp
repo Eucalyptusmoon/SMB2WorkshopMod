@@ -1,5 +1,6 @@
 #include "fix_storm_continue_platform.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 
 // Fixes an issue with rain droplets not appearing correctly on the continue platform in the storm theme.
@@ -15,17 +16,17 @@ void tick() {
     // Frame counter check helps prevent race conditions
     if ((mkb::sub_mode == (mkb::SMD_GAME_CONTINUE_MAIN) || mkb::sub_mode == (mkb::SMD_GAME_CONTINUE_INIT)) && (mkb::sub_mode_frame_counter >= 2)) {
         // Nop some branches to code which handle rotating the storm raindrops
-        patch::write_nop(reinterpret_cast<void*>(0x802de2e4));
-        patch::write_nop(reinterpret_cast<void*>(0x802de2ec));
-        patch::write_nop(reinterpret_cast<void*>(0x802de2f4));
-        patch::write_nop(reinterpret_cast<void*>(0x802de2fc));
+        patch::write_nop(relutil::relocate_addr(0x802de2e4));
+        patch::write_nop(relutil::relocate_addr(0x802de2ec));
+        patch::write_nop(relutil::relocate_addr(0x802de2f4));
+        patch::write_nop(relutil::relocate_addr(0x802de2fc));
     }
     else {
         // Original instructions
-        patch::write_word(reinterpret_cast<void*>(0x802de2e4), 0x4bd84c4d);
-        patch::write_word(reinterpret_cast<void*>(0x802de2ec), 0x4bd84bd1);
-        patch::write_word(reinterpret_cast<void*>(0x802de2f4), 0x4bd84cc9);
-        patch::write_word(reinterpret_cast<void*>(0x802de2fc), 0x4bd84bc1);
+        patch::write_word(relutil::relocate_addr(0x802de2e4), 0x4bd84c4d);
+        patch::write_word(relutil::relocate_addr(0x802de2ec), 0x4bd84bd1);
+        patch::write_word(relutil::relocate_addr(0x802de2f4), 0x4bd84cc9);
+        patch::write_word(relutil::relocate_addr(0x802de2fc), 0x4bd84bc1);
     }
 }
 

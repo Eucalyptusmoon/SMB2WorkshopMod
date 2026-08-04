@@ -2,6 +2,7 @@
 
 #include "internal/assembly.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -21,7 +22,7 @@ TICKABLE_DEFINITION((
 // custom monkey count instead
 void init_main_loop() {
     monkey_count = *active_tickable_ptr->active_value;// Get our monkey count
-    patch::write_word(reinterpret_cast<void*>(0x803DD450), PPC_INSTR_LI(PPC_R0, monkey_count));
+    patch::write_word(relutil::relocate_addr(0x803DD450), PPC_INSTR_LI(PPC_R0, monkey_count));
 }
 
 }// namespace custom_starting_monkey_count

@@ -2,9 +2,22 @@
 
 #include "internal/assembly.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 
 namespace story_continuous_music {
+
+u32 story_mode_music_hook() {
+    if ((mkb::sub_mode >= mkb::SMD_GAME_READY_INIT &&
+         mkb::sub_mode <= mkb::SMD_GAME_RINGOUT_MAIN) ||
+        mkb::sub_mode == mkb::SMD_GAME_RETRY_MAIN) {
+        auto cancel_hurry_up_music =
+            reinterpret_cast<void (*)(u32)>(relutil::relocate_addr(0x802A5E94));
+        cancel_hurry_up_music(100);
+        return 1;
+    }
+    return 0;
+}
 
 TICKABLE_DEFINITION((
         .name = "story-mode-music-fix",
@@ -17,9 +30,9 @@ TICKABLE_DEFINITION((
 // affecting whether or not the music restarts/changes. Only modifies this when
 // the submode indicates we're currently on a stage, or if we're on the 'Retry' screen.
 void init_main_loop() {
-    patch::write_branch_bl(reinterpret_cast<void*>(0x802a5c34),
-                           reinterpret_cast<void*>(main::story_mode_music_hook));
-    patch::write_nop(reinterpret_cast<void*>(0x80273aa0));
+    patch::write_branch_bl(relutil::relocate_addr(0x802a5c34),
+                           reinterpret_cast<void*>(story_mode_music_hook));
+    patch::write_nop(relutil::relocate_addr(0x80273aa0));
 }
 
 }// namespace story_continuous_music

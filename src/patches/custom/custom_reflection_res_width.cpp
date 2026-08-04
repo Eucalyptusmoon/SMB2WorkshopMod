@@ -2,6 +2,7 @@
 
 #include "internal/assembly.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -21,7 +22,7 @@ TICKABLE_DEFINITION((
 // to our custom width
 void init_main_loop() {
     width = *active_tickable_ptr->active_value;// Get our width
-    patch::write_word(reinterpret_cast<void*>(0x8034aed8), PPC_INSTR_LI(PPC_R0, width));
+    patch::write_word(relutil::relocate_addr(0x8034aed8), PPC_INSTR_LI(PPC_R0, width));
 }
 
 }// namespace custom_reflection_res_width

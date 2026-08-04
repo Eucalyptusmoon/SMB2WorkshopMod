@@ -1,6 +1,7 @@
 #include "menu_option_toggle.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
 #include "utils/ppcutil.h"
@@ -50,9 +51,9 @@ u32 determine_party_game_unlock_status(int id) {
 
 void init_sel_ngc() {
     patch::hook_function(mkb::g_check_if_partygame_unlocked, determine_party_game_unlock_status);
-    patch::write_word(reinterpret_cast<void*>(0x808f9154), PPC_INSTR_LI(PPC_R0, (~party_game_bitflag & 0x3f)));
-    patch::write_word(reinterpret_cast<void*>(0x808ff800), PPC_INSTR_LI(PPC_R0, (main_game_bitflag + 0x4)));
-    patch::write_word(reinterpret_cast<void*>(0x808ff80c), PPC_INSTR_LI(PPC_R0, (main_game_bitflag)));
+    patch::write_word(relutil::relocate_addr(0x808f9154), PPC_INSTR_LI(PPC_R0, (~party_game_bitflag & 0x3f)));
+    patch::write_word(relutil::relocate_addr(0x808ff800), PPC_INSTR_LI(PPC_R0, (main_game_bitflag + 0x4)));
+    patch::write_word(relutil::relocate_addr(0x808ff80c), PPC_INSTR_LI(PPC_R0, (main_game_bitflag)));
 
     mkb::strcpy(mkb::CANNOT_SELECT_PARTY_GAME_STRING, "You cannot play this game\n in this custom pack.");
     mkb::strcpy(mkb::CAN_PURCHASE_PARTY_GAME_STRING, "You cannot unlock this game\n in this custom pack.");

@@ -176,7 +176,7 @@ $(OFILES_SOURCES) : $(HFILES)
 # REL linking
 %.rel: %.elf
 	@echo output ... $(notdir $@)
-	@$(ELF2REL) $< -s $(MAPFILE) --rel-version 2 --rel-id 100
+	@$(ELF2REL) $< $(MAPFILE) $@ 100 2
 	
 #---------------------------------------------------------------------------------
 # This rule links in binary data with the .jpg extension

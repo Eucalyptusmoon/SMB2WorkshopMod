@@ -2,6 +2,7 @@
 
 #include "internal/assembly.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "utils/ppcutil.h"
 
@@ -46,10 +47,10 @@ void init_sel_ngc() {
     // Update the practice mode story mode display counter to show the proper number of worlds
 
     // Visually update the indicator
-    patch::write_word(reinterpret_cast<void*>(0x8090DBD0),
+    patch::write_word(relutil::relocate_addr(0x8090DBD0),
                       PPC_INSTR_CMPWI(PPC_R26, world_count));
     // Update the indicator logic
-    patch::write_word(reinterpret_cast<void*>(0x80900f08),
+    patch::write_word(relutil::relocate_addr(0x80900f08),
                       PPC_INSTR_LI(PPC_R29, world_count));
 }
 

@@ -1,6 +1,7 @@
 #include "story_double_stage_select.h"
 #include "../internal/pad.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
 #include "utils/ppcutil.h"
@@ -105,8 +106,8 @@ void init_main_loop() {
     // Expand entry count
     mkb::pausemenu_entry_counts[6] = 7;
     // Edits behaviors in the function which handles pausemenu selections
-    patch::write_nop(reinterpret_cast<void*>(0x802745a4));
-    patch::write_word(reinterpret_cast<void*>(0x8027459c), PPC_INSTR_CMPWI(PPC_R0, 4));
+    patch::write_nop(relutil::relocate_addr(0x802745a4));
+    patch::write_word(relutil::relocate_addr(0x8027459c), PPC_INSTR_CMPWI(PPC_R0, 4));
     // Hook into the function which checks input in the pausemenu for our recreated behaviors
     patch::hook_function(s_check_pause_menu_input_tramp, mkb::check_pause_menu_input, [](mkb::Sprite* pause_sprite) {
         s_check_pause_menu_input_tramp.dest(pause_sprite);
@@ -117,21 +118,21 @@ void init_main_loop() {
 void tick() {
     if (mkb::main_game_mode == mkb::STORY_MODE && mkb::sub_mode != mkb::SMD_GAME_SCENARIO_MAIN) {
         // Rids and rearranges some vanilla behaviors for pausemenu selections when in Story Mode
-        patch::write_word(reinterpret_cast<void*>(0x8027513c), 0x3803fffd);
-        patch::write_nop(reinterpret_cast<void*>(0x80273ad0));
+        patch::write_word(relutil::relocate_addr(0x8027513c), 0x3803fffd);
+        patch::write_nop(relutil::relocate_addr(0x80273ad0));
         // In the function which handles displaying the pausemenu sprite, edit some values so seven
         // options at once display properly
-        patch::write_word(reinterpret_cast<void*>(0x8032a5a0), 0x2c000007);
-        patch::write_word(reinterpret_cast<void*>(0x8032a760), 0x2c000007);
-        patch::write_word(reinterpret_cast<void*>(0x8032a768), 0x1c7c0019);
+        patch::write_word(relutil::relocate_addr(0x8032a5a0), 0x2c000007);
+        patch::write_word(relutil::relocate_addr(0x8032a760), 0x2c000007);
+        patch::write_word(relutil::relocate_addr(0x8032a768), 0x1c7c0019);
     }
     else {
         // Original instructions
-        patch::write_word(reinterpret_cast<void*>(0x8027513c), 0x3803ffff);
-        patch::write_word(reinterpret_cast<void*>(0x80273ad0), 0x3803ffff);
-        patch::write_word(reinterpret_cast<void*>(0x8032a5a0), 0x2c000006);
-        patch::write_word(reinterpret_cast<void*>(0x8032a760), 0x2c000006);
-        patch::write_word(reinterpret_cast<void*>(0x8032a768), 0x1c7c001e);
+        patch::write_word(relutil::relocate_addr(0x8027513c), 0x3803ffff);
+        patch::write_word(relutil::relocate_addr(0x80273ad0), 0x3803ffff);
+        patch::write_word(relutil::relocate_addr(0x8032a5a0), 0x2c000006);
+        patch::write_word(relutil::relocate_addr(0x8032a760), 0x2c000006);
+        patch::write_word(relutil::relocate_addr(0x8032a768), 0x1c7c001e);
     }
 }
 }// namespace story_double_stage_select

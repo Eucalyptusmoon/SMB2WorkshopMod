@@ -1,6 +1,7 @@
 #include "fix_stobj_draw.h"
 
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
 
@@ -49,7 +50,7 @@ void init_main_loop() {
     for (u32 addr: lbz_addrs_lo) {
         u32 ram_addr = addr + 0x80240000 - 0x80199fa0 + 0x802701d8;
         // Nop `extsb` instr following lbz to prevent sign extension
-        patch::write_nop(reinterpret_cast<void*>(ram_addr + 4));
+        patch::write_nop(relutil::relocate_addr(ram_addr + 4));
     }
 }
 

@@ -2,6 +2,7 @@
 #include "../internal/pad.h"
 #include "death_counter.h"
 #include "internal/patch.h"
+#include "internal/relutil.h"
 #include "internal/tickable.h"
 #include "mkb/mkb.h"
 
@@ -77,13 +78,13 @@ void pausemenu_handler() {
             mkb::g_current_pause_menu_entry_count = 4;
             mkb::pausemenu_entry_pointers[9] = mkb::challenge_goal_pausemenu_entries;
             mkb::pausemenu_entry_pointers[1] = mkb::challenge_play_pausemenu_entries;
-            patch::write_word(reinterpret_cast<void*>(0x80273cc8), 0x2c000004);// in the instruction which handles pausemenu input, Exit Game when option 4 is selected
+            patch::write_word(relutil::relocate_addr(0x80273cc8), 0x2c000004);// in the instruction which handles pausemenu input, Exit Game when option 4 is selected
         }
         else if ((mkb::sub_mode == mkb::SMD_GAME_READY_MAIN || mkb::sub_mode == mkb::SMD_GAME_READY_INIT) && mkb::mode_info.attempt_count > 1) {
             mkb::pausemenu_entry_counts[1] = 4;
             mkb::g_current_pause_menu_entry_count = 4;
             mkb::pausemenu_entry_pointers[1] = mkb::challenge_play_pausemenu_entries;
-            patch::write_word(reinterpret_cast<void*>(0x80273cc8), 0x2c000004);// in the instruction which handles pausemenu input, Exit Game when option 4 is selected
+            patch::write_word(relutil::relocate_addr(0x80273cc8), 0x2c000004);// in the instruction which handles pausemenu input, Exit Game when option 4 is selected
         }
         else if (mkb::sub_mode == mkb::SMD_GAME_ROLL_INIT || mkb::sub_mode == mkb::SMD_GAME_ROLL_MAIN) {
             // The credits minigame uses the same main game mode as Challenge Mode, so we need a special case to set its respective menu
@@ -141,7 +142,7 @@ void pausemenu_handler() {
             // Repoint menu entries to our expanded ones
             mkb::pausemenu_entry_pointers[1] = menu_options_1;
             mkb::pausemenu_entry_pointers[9] = menu_options_2;
-            patch::write_word(reinterpret_cast<void*>(0x80273cc8), 0x2c000005);// in the instruction which handles pausemenu input, Exit Game when option 5 is selected
+            patch::write_word(relutil::relocate_addr(0x80273cc8), 0x2c000005);// in the instruction which handles pausemenu input, Exit Game when option 5 is selected
             // Expand entry count
             mkb::pausemenu_entry_counts[1] = 5;
             mkb::g_current_pause_menu_entry_count = 5;
